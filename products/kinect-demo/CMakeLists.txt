@@ -26,8 +26,14 @@ add_executable(favorite-things
     texture.cpp
     clusterizer.cpp
     viewerwindow.cpp
+    kinect_demo_viewer.cpp
     azure_vision_request.cpp
-    body_geometry.cpp)
+    euclid.cpp
+    controller.cpp
+    kinector.cpp
+    scene.cpp
+    scene_writair.cpp
+    thingfinder.cpp)
 
 
 target_link_libraries(favorite-things PRIVATE

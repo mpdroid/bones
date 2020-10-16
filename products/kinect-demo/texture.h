@@ -61,6 +61,7 @@ public:
     //
     Texture(Texture &&other);
     Texture &operator=(Texture &&other);
+    Texture(int width, int height);
 
 private:
     // Creating a texture before the viewer window has been initialized will fail,
@@ -70,7 +71,6 @@ private:
     // on the GPU.  Use Update() to update the image stored in the texture.
     //
     friend class ViewerWindow;
-    Texture(int width, int height);
 
     // Deletes the wrapped texture.
     //

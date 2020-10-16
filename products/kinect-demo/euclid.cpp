@@ -1,21 +1,273 @@
-#include "body_geometry.h"
+#include "euclid.h"
+
+k4a_float3_t vector_to_point(Eigen::Vector3f aVector)
+{
+    return {aVector[0], aVector[1], aVector[2]};
+}
+
+bool is_point_inside_bounded_plane(Eigen::Vector3f intercept, BoundingPlane plane)
+{
+    Eigen::Vector3f maxVal = plane.corners.colwise().maxCoeff();
+    Eigen::Vector3f minVal = plane.corners.colwise().minCoeff();
+
+    return abs(maxVal(0) - intercept[0]) <= abs(maxVal(0) - minVal(0)) + 0.00001f &&
+           abs(maxVal(1) - intercept[1]) <= abs(maxVal(1) - minVal(1)) + 0.00001f &&
+           abs(maxVal(2) - intercept[2]) <= abs(maxVal(2) - minVal(2)) + 0.00001f;
+}
+
+bool does_ray_intersect_plane(Ray ray, BoundingPlane plane, k4a_float3_t *intercept, float *distanceToPlane)
+{
+    bool doesIntercept = false;
+    float denominator = plane.normal.dot(ray.direction);
+    if (abs(denominator) > epsilon)
+    {
+        Eigen::Vector3f difference = plane.center - ray.origin;
+        float t = difference.dot(plane.normal) / denominator;
+        if (t >= 0.0001f)
+        {
+            // cout << " evaluating plane t value " << t << endl;
+            Eigen::Vector3f intercept3f = ray.origin + ray.direction * t;
+            if (is_point_inside_bounded_plane(intercept3f, plane))
+            {
+                doesIntercept = true;
+                *distanceToPlane = (intercept3f - ray.origin).norm();
+                // cout << " distance to plane " << *distanceToPlane << endl;
+                k4a_float3_t k4_intercept = {intercept3f[0], intercept3f[1], intercept3f[2]};
+                *intercept = k4_intercept;
+            }
+        }
+        else
+        {
+            doesIntercept = false;
+        }
+    }
+    else
+    {
+        doesIntercept = false;
+    }
+    return doesIntercept;
+}
+
+// move to Geometry class
+Eigen::Vector3f compute_normal(Eigen::Matrix<float, 4, 3> corners)
+{
+    Eigen::Vector3f first = corners.row(1) - corners.row(0);
+    Eigen::Vector3f second = corners.row(2) - corners.row(0);
+    auto normal = first.cross(second);
+    auto l2norm = normal.norm();
+    normal = normal / l2norm;
+    // printf(" normal %f, %f, %f\n", normal[0], normal[1], normal[2] );
+    return normal;
+}
+
+bool does_ray_intersect_cube(Ray ray, BoundingCube cube, k4a_float3_t *intercept, float *distanceToPointee)
+{
+    vector<BoundingPlane> boundingPlanes;
+    bool doesIntersect = false;
+    float distanceToNearest = std::numeric_limits<float>::infinity();
+    BoundingPlane nearestPlane;
+    ImVec2 nearestIntersect;
+    k4a_float3_t k4_intercept;
+    bool interceptflag = false;
+    BoundingPlane plane1;
+    plane1.corners.row(0) << cube.u[0], cube.u[1], cube.u[2];
+    plane1.corners.row(1) << cube.u[0], cube.u[1], cube.v[2];
+    plane1.corners.row(2) << cube.u[0], cube.v[1], cube.u[2];
+    plane1.corners.row(3) << cube.u[0], cube.v[1], cube.v[2];
+    plane1.normal = compute_normal(plane1.corners);
+
+    plane1.center << cube.u[0], (cube.u[1] + cube.v[1]) / 2.f, (cube.u[2] + cube.v[2]) / 2.f;
+    boundingPlanes.push_back(plane1);
+
+    BoundingPlane plane2;
+    plane2.corners.row(0) << cube.v[0], cube.u[1], cube.u[2];
+    plane2.corners.row(1) << cube.v[0], cube.u[1], cube.v[2];
+    plane2.corners.row(2) << cube.v[0], cube.v[1], cube.u[2];
+    plane2.corners.row(3) << cube.v[0], cube.v[1], cube.v[2];
+    plane2.normal = compute_normal(plane2.corners);
+
+    plane2.center << cube.v[0], (cube.u[1] + cube.v[1]) / 2.f, (cube.u[2] + cube.v[2]) / 2.f;
+    boundingPlanes.push_back(plane2);
+
+    BoundingPlane plane3;
+    plane3.corners.row(0) << cube.u[0], cube.u[1], cube.u[2];
+    plane3.corners.row(1) << cube.u[0], cube.u[1], cube.v[2];
+    plane3.corners.row(2) << cube.v[0], cube.u[1], cube.u[2];
+    plane3.corners.row(3) << cube.v[0], cube.u[1], cube.v[2];
+    plane3.normal = compute_normal(plane3.corners);
+
+    plane3.center << (cube.u[0] + cube.v[0]) / 2.f, cube.u[1], (cube.u[2] + cube.v[2]) / 2.f;
+    boundingPlanes.push_back(plane3);
+
+    BoundingPlane plane4;
+    plane4.corners.row(0) << cube.u[0], cube.v[1], cube.u[2];
+    plane4.corners.row(1) << cube.u[0], cube.v[1], cube.v[2];
+    plane4.corners.row(2) << cube.v[0], cube.v[1], cube.u[2];
+    plane4.corners.row(3) << cube.v[0], cube.v[1], cube.v[2];
+    plane4.normal = compute_normal(plane4.corners);
+
+    plane4.center << (cube.u[0] + cube.v[0]) / 2.f, cube.v[1], (cube.u[2] + cube.v[2]) / 2.f;
+    boundingPlanes.push_back(plane4);
+
+    BoundingPlane plane5;
+    plane5.corners.row(0) << cube.u[0], cube.u[1], cube.u[2];
+    plane5.corners.row(1) << cube.u[0], cube.v[1], cube.u[2];
+    plane5.corners.row(2) << cube.v[0], cube.u[1], cube.u[2];
+    plane5.corners.row(3) << cube.v[0], cube.v[1], cube.u[2];
+    plane5.normal = compute_normal(plane5.corners);
+
+    plane5.center << (cube.u[0] + cube.v[0]) / 2.f, (cube.u[1] + cube.v[1]) / 2.f, cube.u[2];
+    boundingPlanes.push_back(plane5);
+
+    BoundingPlane plane6;
+    plane6.corners.row(0) << cube.u[0], cube.u[1], cube.v[2];
+    plane6.corners.row(1) << cube.u[0], cube.v[1], cube.v[2];
+    plane6.corners.row(2) << cube.v[0], cube.u[1], cube.v[2];
+    plane6.corners.row(3) << cube.v[0], cube.v[1], cube.v[2];
+    plane6.normal = compute_normal(plane6.corners);
+
+    plane6.center << (cube.u[0] + cube.v[0]) / 2.f, (cube.u[1] + cube.v[1]) / 2.f, cube.v[2];
+    boundingPlanes.push_back(plane6);
+
+    int interceptCount = 0;
+    for (int p = 0; p < boundingPlanes.size(); p++)
+    {
+        BoundingPlane plane = boundingPlanes[p];
+        float distance;
+        k4a_float3_t planeInterceptVector;
+        bool planeIntersects = does_ray_intersect_plane(ray, plane, &planeInterceptVector, &distance);
+        if (planeIntersects == true && (distance < distanceToNearest))
+        {
+            interceptCount++;
+            // cout << "found intersecting plane " << p << " at " << distance << endl;
+            doesIntersect = true;
+            nearestPlane = plane;
+            distanceToNearest = distance;
+            *intercept = planeInterceptVector;
+            // k4_intercept = {planeInterceptVector.v[0], plane.center[1], plane.center[2]};
+            interceptflag = true;
+        }
+    }
+    // *distanceToPointee = distanceToNearest;
+
+    if (interceptflag == true)
+    {
+        doesIntersect = true;
+        *distanceToPointee = distanceToNearest;
+    }
+    else
+    {
+        doesIntersect = false;
+        *distanceToPointee = std::numeric_limits<float>::infinity();
+    }
+    return doesIntersect;
+}
+
+bool find_intersecting_cube(Ray ray, vector<BoundingCube> *pointCubes, int *pointee)
+{
+    float distanceToNearest = std::numeric_limits<float>::infinity();
+    k4a_float3_t intercept;
+    bool found = false;
+    for (int b = 0; b < (*pointCubes).size(); b++)
+    {
+        BoundingCube *cube = &((*pointCubes)[b]);
+        k4a_float3_t intersectionVector;
+        float distance;
+        bool isPointee = does_ray_intersect_cube(ray, *cube, &intersectionVector, &distance);
+        if (isPointee == true && distance < distanceToNearest)
+        {
+            *pointee = b;
+            cube->pointer.clear();
+            cube->pointer.push_back({ray.origin[0], ray.origin[1], ray.origin[2]});
+            cube->pointer.push_back(intersectionVector);
+            distanceToNearest = distance;
+            found = true;
+        }
+    }
+
+    return found;
+}
+
+void point_to_color2d(k4a_float3_t *point, k4a_calibration_t *sensor_calibration, int w, int h, k4a_float2_t *point_2d)
+{
+
+    int valid = 0;
+    k4a_calibration_3d_to_2d(sensor_calibration,
+                             point,
+                             K4A_CALIBRATION_TYPE_DEPTH,
+                             K4A_CALIBRATION_TYPE_COLOR,
+                             point_2d,
+                             &valid);
+
+    if (valid == 0)
+    {
+        *point_2d = {0.f, 0.f};
+    }
+    else
+    {
+        if (point_2d->v[0] < 0.f)
+        {
+            point_2d->v[0] = 0.f;
+        }
+        if (point_2d->v[0] > (float)w)
+        {
+            point_2d->v[0] = (float)w;
+        }
+        if (point_2d->v[1] < 0.f)
+        {
+            point_2d->v[1] = 0.f;
+        }
+        if (point_2d->v[1] > (float)h)
+        {
+            point_2d->v[1] = (float)h;
+        }
+    }
+}
+
+// TODO move to geometry
+void vector_to_color2d(Vector3f vec3, k4a_calibration_t *sensor_calibration, int w, int h, k4a_float2_t *point_2d)
+{
+    k4a_float3_t point = vector_to_point(vec3);
+    point_to_color2d(&point, sensor_calibration, w, h, point_2d);
+}
+
+ImVec2 computeActualImageSize(const ImVec2 window_size,
+                              int color_image_width,
+                              int color_image_height)
+{
+    float iw = (float)color_image_width;
+    float ih = (float)color_image_height;
+    float aw = window_size.x;
+    float ah = window_size.y;
+
+    float vertical_scale = ah / ih;
+    float horizontal_scale = aw / iw;
+    float scale = min(vertical_scale, horizontal_scale);
+    aw = scale * iw;
+    ah = scale * ih;
+
+    return ImVec2((int)aw, (int)ah);
+}
 
 BodyGeometry::BodyGeometry(k4a_calibration_t *sensor_calibration,
-                         const float window_origin,
-                         const ImVec2 window_size,
-                         int color_image_width,
-                         int color_image_height,
-                         vector<JointCoordinates> *moving_average,
-                         k4abt_joint_id_t pointer_joint_id,
-                         vector<k4abt_body_t> bodies,
-                         vector<k4abt_joint_id_t> joint_ids)
+                           const float window_origin,
+                           const ImVec2 window_size,
+                           int color_image_width,
+                           int color_image_height,
+                           vector<JointCoordinates> *moving_average,
+                           k4abt_joint_id_t pointer_joint_id,
+                           vector<k4abt_body_t> bodies,
+                           vector<k4abt_joint_id_t> joint_ids)
 {
     this->sensor_calibration = sensor_calibration;
     this->window_origin = window_origin;
     this->window_size = window_size;
     this->color_image_height = color_image_height;
     this->color_image_width = color_image_width;
-    this->rendered_height = (int)((float)this->color_image_height * (float)window_size.x / (float)this->color_image_width);
+    this->actual_image_size = computeActualImageSize(window_size, color_image_width, color_image_height);
+
+    // this->rendered_height = (int)((float)this->color_image_height * (float)window_size.x / (float)this->color_image_width);
+    this->rendered_height = this->actual_image_size.y;
     this->bodies = bodies;
     for (int j = 0; j < joint_ids.size(); j++)
     {
@@ -80,6 +332,11 @@ BodyGeometry::~BodyGeometry()
     this->world_to_joint.clear();
 }
 
+int BodyGeometry::get_body_count()
+{
+    return this->bodies.size();
+}
+
 void BodyGeometry::update_moving_average(JointCoordinates *moving_average, k4abt_joint_t joint)
 {
     moving_average->position.v[0] = moving_average->position.v[0] * (1.f - MULTIPLIER) + joint.position.v[0] * MULTIPLIER;
@@ -123,7 +380,7 @@ ImVec2 BodyGeometry::joint_target_to_window(uint32_t body_id, k4abt_joint_id_t j
                                  K4A_CALIBRATION_TYPE_COLOR,
                                  &k4a_point_2d,
                                  &valid);
-        x = x + (int)((k4a_point_2d.v[0] / (float)this->color_image_width) * window_size.x);
+        x = x + (int)((k4a_point_2d.v[0] / (float)this->color_image_width) * this->actual_image_size.x);
         y = y + (int)(k4a_point_2d.v[1] / (float)this->color_image_height * (float)rendered_height);
         if (valid == 1)
             break;
@@ -163,7 +420,7 @@ ImVec2 BodyGeometry::joint_to_window(uint32_t body_id, k4abt_joint_id_t joint_id
     int x = (int)window_origin, y = 0;
     if (valid == 1)
     {
-        x = x + (int)((k4a_point_2d.v[0] / (float)this->color_image_width) * window_size.x);
+        x = x + (int)((k4a_point_2d.v[0] / (float)this->color_image_width) * this->actual_image_size.x);
         y = y + (int)(k4a_point_2d.v[1] / (float)this->color_image_height * (float)rendered_height);
     }
     return fittedVector(x, y);
@@ -176,17 +433,17 @@ ImVec2 BodyGeometry::fittedVector(int x, int y)
     {
         x1 = (int)window_origin;
     }
-    if (x1 > (int)window_origin + (int)window_size.x)
+    if (x1 > (int)window_origin + (int)actual_image_size.x)
     {
-        x1 = (int)window_origin + (int)window_size.x;
+        x1 = (int)window_origin + (int)actual_image_size.x;
     }
     if (y1 < 0)
     {
         y1 = 0;
     }
-    if (y1 > (int)window_size.y)
+    if (y1 > (int)actual_image_size.y)
     {
-        y1 = (int)window_size.y;
+        y1 = (int)actual_image_size.y;
     }
 
     return ImVec2(x1, y1);
@@ -230,14 +487,13 @@ bool BodyGeometry::is_thumb_pointing_upwards(uint32_t body_id)
     k4abt_joint_t thumb = this->get_joint(body_id, K4ABT_JOINT_THUMB_RIGHT);
     k4abt_joint_t hand = this->get_joint(body_id, K4ABT_JOINT_HANDTIP_RIGHT);
 
-
     return thumb.position.v[1] - hand.position.v[1] < 0.f;
 }
 
 k4a_float2_t BodyGeometry::window_to_point2d(ImVec2 window_point)
 {
-    float x = (window_point.x - this->window_origin) * (float)this->color_image_width / this->window_size.x;
-    float y = (window_point.y) * (float)this->color_image_height / this->window_size.y;
+    float x = (window_point.x - this->window_origin) * (float)this->color_image_width / this->actual_image_size.x;
+    float y = (window_point.y) * (float)this->color_image_height / this->actual_image_size.y;
     int valid = 0;
     k4a_float2_t pt2d = {x, y};
     return pt2d;
@@ -269,7 +525,7 @@ ImVec2 BodyGeometry::point_to_window(k4a_float3_t target)
     int x = (int)window_origin, y = 0;
     if (valid == 1)
     {
-        x = (int)window_origin + (int)((k4a_point_2d.v[0] / (float)this->color_image_width) * window_size.x);
+        x = (int)window_origin + (int)((k4a_point_2d.v[0] / (float)this->color_image_width) * actual_image_size.x);
         y = (int)(k4a_point_2d.v[1] / (float)this->color_image_height * (float)rendered_height);
     }
     return fittedVector(x, y);
@@ -278,7 +534,7 @@ ImVec2 BodyGeometry::point_to_window(k4a_float3_t target)
 ImVec2 BodyGeometry::vector2f_to_window(Eigen::Vector2f point)
 {
     int x = point[0], y = point[1];
-    x = x + (int)((point[0] / (float)this->color_image_width) * window_size.x);
+    x = x + (int)((point[0] / (float)this->color_image_width) * actual_image_size.x);
     y = y + (int)(point[1] / (float)this->color_image_height * (float)rendered_height);
     return fittedVector(x, y);
 }
@@ -300,7 +556,7 @@ ImVec2 BodyGeometry::vector_to_window(Eigen::Vector3f point)
     int x = (int)window_origin, y = 0;
     if (valid == 1)
     {
-        x = x + (int)((k4a_point_2d.v[0] / (float)this->color_image_width) * window_size.x);
+        x = x + (int)((k4a_point_2d.v[0] / (float)this->color_image_width) * actual_image_size.x);
         y = y + (int)(k4a_point_2d.v[1] / (float)this->color_image_height * (float)rendered_height);
     }
     return fittedVector(x, y);
@@ -453,4 +709,17 @@ bool BodyGeometry::is_point_in_forward_space(k4a_float3_t point, k4abt_joint_id_
         }
     }
     return false;
+}
+
+k4a_calibration_t *BodyGeometry::get_sensor_calibration()
+{
+        return this->sensor_calibration;
+}
+int BodyGeometry::get_color_image_width()
+{
+    return this->color_image_width;
+}
+int BodyGeometry::get_color_image_height()
+{
+    return this->color_image_height;
 }

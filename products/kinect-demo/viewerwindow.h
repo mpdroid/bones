@@ -7,94 +7,67 @@
 #include "k4aimgui_all.h"
 
 #include "texture.h"
-#include <vector>
-#include <map>
-using namespace std;
-
-template <typename Base, typename T>
-inline bool instanceof (const T *)
-{
-    return is_base_of<Base, T>::value;
-}
 
 namespace viewer
 {
-    class ViewerWindow
+class ViewerWindow
+{
+public:
+    // ImGui's OpenGL/GLFW bindings use globals that make having multiple windows
+    // not work properly, so the ViewerWindow is a singleton.
+    //
+    static ViewerWindow &Instance();
+
+    // Initialize the window, setting its default title and dimensions.
+    // You must call Initialize() before attempting to render to the window.
+    //
+    void Initialize(const char *windowTitle, int defaultWidth, int defaultHeight);
+
+    // Tells the graphics framework to start a new frame.
+    // Returns false if the application has been closed and we should exit.
+    //
+    bool BeginFrame();
+
+    // Tells the graphics framework to finish rendering the current frame.
+    //
+    void EndFrame();
+
+    // Get the current width of the window
+    // Useful for figuring out how to size what you pass to ShowWindow().
+    //
+    inline int GetWidth() const
     {
-    public:
-        // ImGui's OpenGL/GLFW bindings use globals that make having multiple windows
-        // not work properly, so the ViewerWindow is a singleton.
-        //
-        static ViewerWindow &Instance();
+        return m_windowWidth;
+    }
 
-        // Initialize the window, setting its default title and dimensions.
-        // You must call Initialize() before attempting to render to the window.
-        //
-        void Initialize(const char *windowTitle, int defaultWidth, int defaultHeight);
+    // Get the current height of the window.
+    // Useful for figuring out how to size what you pass to ShowWindow().
+    //
+    inline int GetHeight() const
+    {
+        return m_windowHeight;
+    }
 
-        // Tells the graphics framework to start a new frame.
-        // Returns false if the application has been closed and we should exit.
-        //
-        bool BeginFrame();
+    // Create a Texture with the specified dimensions that you can use to show image data
+    //
+    Texture CreateTexture(int width, int height);
+    Texture CreateTexture(std::pair<int, int> dimensions);
 
-        // Tells the graphics framework to finish rendering the current frame.
-        //
-        void EndFrame();
+    // Show a sub-window within the main window with the given name that shows the image stored in
+    // texture at the provided position.  The image will be stretched (maintaining aspect ratio) to
+    // fill maxSize.
+    //
+    void ShowTexture(const char *name, const Texture &texture, const ImVec2 &position, const ImVec2 &maxSize);
 
-        // Get the current width of the window
-        // Useful for figuring out how to size what you pass to ShowWindow().
-        //
-        inline int GetWidth() const
-        {
-            return m_windowWidth;
-        }
+    ~ViewerWindow();
+protected:
+    GLFWwindow *m_window = nullptr;
 
-        // Get the current height of the window.
-        // Useful for figuring out how to size what you pass to ShowWindow().
-        //
-        inline int GetHeight() const
-        {
-            return m_windowHeight;
-        }
+    int m_windowWidth;
+    int m_windowHeight;
 
-        // Create a Texture with the specified dimensions that you can use to show image data
-        //
-        Texture CreateTexture(int width, int height);
-        Texture CreateTexture(std::pair<int, int> dimensions);
-
-        // Show a sub-window within the main window with the given name that shows the image stored in
-        // texture at the provided position.  The image will be stretched (maintaining aspect ratio) to
-        // fill maxSize.
-        //
-        void ShowTexture(const char *name, const Texture &texture, const ImVec2 &position, const ImVec2 &maxSize);
-
-        void ShowTextureWithBodyTrackingInfo(const char *name, const Texture &texture, const ImVec2 &position, const ImVec2 &maxSize,
-                                             const ImVec2 &nose,
-                                             vector<ImVec2> eyes,
-                                             ImVec2 &head,
-                                             vector<ImVec2> lineOfSight);
-
-        void SetKeyCallBackHandler(GLFWkeyfun cbfun);
-
-        void ShowTextureWithPersistentBoundingBoxes(const char *name, const Texture &texture, const ImVec2 &position, const ImVec2 &maxSize,
-                                                    vector<PointerWidget> *lightSabers,
-                                                    vector<PointerWidget> *objectPointers,
-                                                    vector<AxisWidget> *axes,
-                                                    vector<JointWidget> *jointWidgets,
-                                                    vector<LetterWidget> *letterWidgets,
-                                                    vector<CubeWidget> *cubeWidgets,
-                                                    vector<int> bodies, int currentFrameNumber, int frameInterval);
-
-        ~ViewerWindow();
-
-    private:
-        ViewerWindow() = default;
-
-        GLFWwindow *m_window = nullptr;
-
-        int m_windowWidth;
-        int m_windowHeight;
-    };
+    ViewerWindow() = default;
+};
 } // namespace viewer
 
 #endif

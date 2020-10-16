@@ -1,3 +1,5 @@
+#ifndef __EUCLID_H
+#define __EUCLID_H
 #include <iostream>
 #include <vector>
 #include <map>
@@ -11,7 +13,11 @@ using namespace linmath;
 #include "clusterizer.h"
 using namespace clusterizer;
 
-#include "k4aimgui_all.h"
+#include "widget.h"
+
+#define PRINT_VECTOR(name, v) \
+    cout << name << " " << v[0] << "," << v[1] << "," << v[2] << endl;
+
 const auto epsilon = std::numeric_limits<float>::epsilon();
 const auto SMOOTHING_FACTOR = 5.f;
 const auto NUM_DATA_POINTS = 20.f;
@@ -75,16 +81,20 @@ public:
     ImVec2 vector_to_window(Eigen::Vector3f point);
     ImVec2 vector2f_to_window(Eigen::Vector2f target);
     k4a_float2_t point_to_color(k4a_float3_t point, int *valid);
-
+    int get_body_count();
     int model_count();
     bool is_point_in_forward_space(k4a_float3_t point, k4abt_joint_id_t joint_id, bool is_x_positive) ;
     bool is_point_in_forward_space(k4a_float3_t point);
     bool is_point_in_forward_space(k4a_float3_t point, vector<Ray> rays);
+    k4a_calibration_t *get_sensor_calibration();
+    int get_color_image_width();
+    int get_color_image_height();
 
 private:
     k4a_calibration_t *sensor_calibration;
     float window_origin;
     ImVec2 window_size;
+    ImVec2 actual_image_size;
     int color_image_width;
     int color_image_height;
     int rendered_height;
@@ -96,3 +106,12 @@ private:
     void update_moving_average(JointCoordinates *moving_average, k4abt_joint_t joint);
     ImVec2 fittedVector(int x, int y);
 };
+
+
+bool find_intersecting_cube(Ray ray, vector<BoundingCube> *pointCubes, int *pointee);
+k4a_float3_t vector_to_point(Eigen::Vector3f aVector);
+void point_to_color2d(k4a_float3_t *point, k4a_calibration_t *sensor_calibration, int w, int h, k4a_float2_t *point_2d);
+void vector_to_color2d(Vector3f vec3, k4a_calibration_t *sensor_calibration, int w, int h, k4a_float2_t *point_2d);
+bool compareBodies(k4abt_body_t first, k4abt_body_t second);
+
+#endif

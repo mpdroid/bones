@@ -3,8 +3,11 @@ using namespace clusterizer;
 
 Clusterizer::Clusterizer(cilantro::VectorSet3f *cilantroPoints, cilantro::VectorSet3f *cilantroColors)
 {
+    cout << "constructing " << endl;
     this->cloud.points = *cilantroPoints;
     this->cloud.colors = *cilantroColors;
+    cout << "constructpr " << this->cloud.points.size() <<  endl;
+    cout << "constructpr " << this->cloud.colors.size() <<  endl;
 }
 
 Clusterizer::~Clusterizer()
@@ -15,9 +18,11 @@ Clusterizer::~Clusterizer()
 vector<BoundingCube> Clusterizer::Clusterize(cilantro::PointCloud3f *segmentedCloud)
 {
     vector<BoundingCube> boundingCubes;
+    cout << "clustering 1" << cloud.points.size() <<  endl;
 
     cilantro::RadiusNeighborhoodSpecification<float> nh(0.02f * 0.02f);
     cilantro::ConnectedComponentExtraction3f<> cce(this->cloud.points);
+    cout << "clustering 1.1" << cloud.colors.size() <<  endl;
     cilantro::PointsColorsProximityEvaluator<float, 3> ev(cloud.colors, 0.1f, 0.05f);
 
     cce.segment(nh, ev, 200, this->cloud.size());
@@ -35,6 +40,7 @@ vector<BoundingCube> Clusterizer::Clusterize(cilantro::PointCloud3f *segmentedCl
     {
         colors.col(i) = color_map.col(labels[i]);
     }
+    cout << "clustering 2" <<  endl;
 
     (*segmentedCloud) = cilantro::PointCloud3f(cloud.points, cloud.normals, colors);
 
@@ -96,6 +102,7 @@ vector<BoundingCube> Clusterizer::Clusterize(cilantro::PointCloud3f *segmentedCl
         cube.pointer = {};
         boundingCubes.push_back(cube);
     }
+    cout << "clustering 3" <<  endl;
     return boundingCubes;
 }
 
