@@ -16,7 +16,7 @@ using namespace std;
 #include "viewerwindow.h"
 using namespace viewer;
 #include "common.h"
-#include "scene.h"
+#include "scene/scene.h"
 using namespace scene;
 template <typename Base, typename T>
 inline bool instanceof (const T *)
@@ -56,18 +56,18 @@ namespace kdviewer
         void ColorizeFilteredDepthImage(const k4a::image &depthImage,
                                         k4a_image_t transformed_color_image,
                                         k4a_image_t xy_table,
-                                        BodyGeometry *body_geometry,
+                                        Euclid *euclid,
                                         vector<Ray> rays,
                                         DepthPixelVisualizationFunction visualizationFn,
                                         std::pair<uint16_t, uint16_t> expectedValueRange,
                                         std::vector<BgraPixel> *buffer);
 
-        void ColorizeClusteredDepthImage(const k4a::image &depthImage,
-                                         k4a_image_t transformed_color_image,
-                                         std::vector<BgraPixel> *buffer,
-                                         cilantro::PointCloud3f *cloud,
-                                         vector<Detection> detections,
-                                         k4a_calibration_t sensor_calibration);
+        // void ColorizeClusteredDepthImage(const k4a::image &depthImage,
+        //                                  k4a_image_t transformed_color_image,
+        //                                  std::vector<BgraPixel> *buffer,
+        //                                  cilantro::PointCloud3f *cloud,
+        //                                  vector<Detection> detections,
+        //                                  k4a_calibration_t sensor_calibration);
 
         float GetColorWindowOrigin();
 

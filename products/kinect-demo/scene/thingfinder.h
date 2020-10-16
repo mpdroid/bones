@@ -1,5 +1,6 @@
 #ifndef __THINGFINDER_H
 #define __THINGFINDER_H
+#include <iostream>
 #include "azure_vision_request.h"
 #include "scene.h"
 #include "kinector.h"
@@ -13,7 +14,7 @@ namespace scene {
         ThingFinderScene();
         ~ThingFinderScene();
         void onLoopStart(int frame_number);
-        void capture(Kinector *kinector, BodyGeometry *body_geometry, int frame_number);
+        void capture(Kinector *kinector, Euclid *euclid, int frame_number);
         void render(ImDrawList *drawList, vector<int> bodies, float y_shift);
         void onLoopEnd();
         vector<Ray> getRays();

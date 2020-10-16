@@ -25,13 +25,11 @@ bool does_ray_intersect_plane(Ray ray, BoundingPlane plane, k4a_float3_t *interc
         float t = difference.dot(plane.normal) / denominator;
         if (t >= 0.0001f)
         {
-            // cout << " evaluating plane t value " << t << endl;
             Eigen::Vector3f intercept3f = ray.origin + ray.direction * t;
             if (is_point_inside_bounded_plane(intercept3f, plane))
             {
                 doesIntercept = true;
                 *distanceToPlane = (intercept3f - ray.origin).norm();
-                // cout << " distance to plane " << *distanceToPlane << endl;
                 k4a_float3_t k4_intercept = {intercept3f[0], intercept3f[1], intercept3f[2]};
                 *intercept = k4_intercept;
             }
@@ -139,12 +137,10 @@ bool does_ray_intersect_cube(Ray ray, BoundingCube cube, k4a_float3_t *intercept
         if (planeIntersects == true && (distance < distanceToNearest))
         {
             interceptCount++;
-            // cout << "found intersecting plane " << p << " at " << distance << endl;
             doesIntersect = true;
             nearestPlane = plane;
             distanceToNearest = distance;
             *intercept = planeInterceptVector;
-            // k4_intercept = {planeInterceptVector.v[0], plane.center[1], plane.center[2]};
             interceptflag = true;
         }
     }
@@ -177,9 +173,9 @@ bool find_intersecting_cube(Ray ray, vector<BoundingCube> *pointCubes, int *poin
         if (isPointee == true && distance < distanceToNearest)
         {
             *pointee = b;
-            cube->pointer.clear();
-            cube->pointer.push_back({ray.origin[0], ray.origin[1], ray.origin[2]});
-            cube->pointer.push_back(intersectionVector);
+            // cube->pointer.clear();
+            // cube->pointer.push_back({ray.origin[0], ray.origin[1], ray.origin[2]});
+            // cube->pointer.push_back(intersectionVector);
             distanceToNearest = distance;
             found = true;
         }
@@ -249,7 +245,7 @@ ImVec2 computeActualImageSize(const ImVec2 window_size,
     return ImVec2((int)aw, (int)ah);
 }
 
-BodyGeometry::BodyGeometry(k4a_calibration_t *sensor_calibration,
+Euclid::Euclid(k4a_calibration_t *sensor_calibration,
                            const float window_origin,
                            const ImVec2 window_size,
                            int color_image_width,
@@ -283,7 +279,6 @@ BodyGeometry::BodyGeometry(k4a_calibration_t *sensor_calibration,
             k4abt_joint_id_t joint_id = joint_ids[j];
             k4abt_joint_t joint = body.skeleton.joints[joint_id];
 
-            // cout << " joint probability " << joint_id << " " << joint.confidence_level << endl;
             k4a_float3_t jointPosition = joint.position;
             k4a_quaternion_t jointOrientation = joint.orientation;
             if (joint_id == pointer_joint_id && b < moving_average->size())
@@ -318,7 +313,7 @@ BodyGeometry::BodyGeometry(k4a_calibration_t *sensor_calibration,
     }
 }
 
-BodyGeometry::~BodyGeometry()
+Euclid::~Euclid()
 {
     for (vector<TransformationMatrix> v : this->joint_to_world)
     {
@@ -332,12 +327,12 @@ BodyGeometry::~BodyGeometry()
     this->world_to_joint.clear();
 }
 
-int BodyGeometry::get_body_count()
+int Euclid::get_body_count()
 {
     return this->bodies.size();
 }
 
-void BodyGeometry::update_moving_average(JointCoordinates *moving_average, k4abt_joint_t joint)
+void Euclid::update_moving_average(JointCoordinates *moving_average, k4abt_joint_t joint)
 {
     moving_average->position.v[0] = moving_average->position.v[0] * (1.f - MULTIPLIER) + joint.position.v[0] * MULTIPLIER;
     moving_average->position.v[1] = moving_average->position.v[1] * (1.f - MULTIPLIER) + joint.position.v[1] * MULTIPLIER;
@@ -348,7 +343,7 @@ void BodyGeometry::update_moving_average(JointCoordinates *moving_average, k4abt
     moving_average->orientation.v[3] = moving_average->orientation.v[3] * (1.f - MULTIPLIER) + joint.orientation.v[3] * MULTIPLIER;
 }
 
-k4a_float3_t BodyGeometry::joint_to_global(uint32_t body_id, k4abt_joint_id_t joint_id, k4a_float3_t target)
+k4a_float3_t Euclid::joint_to_global(uint32_t body_id, k4abt_joint_id_t joint_id, k4a_float3_t target)
 {
     int body_num = body_id_map[body_id];
     int joint_num = joint_id_map[joint_id];
@@ -361,7 +356,7 @@ k4a_float3_t BodyGeometry::joint_to_global(uint32_t body_id, k4abt_joint_id_t jo
     return k4a_transformed;
 }
 
-ImVec2 BodyGeometry::joint_target_to_window(uint32_t body_id, k4abt_joint_id_t joint_id, k4a_float3_t target)
+ImVec2 Euclid::joint_target_to_window(uint32_t body_id, k4abt_joint_id_t joint_id, k4a_float3_t target)
 {
     int valid = 0;
     int x = (int)window_origin, y = 0;
@@ -391,7 +386,7 @@ ImVec2 BodyGeometry::joint_target_to_window(uint32_t body_id, k4abt_joint_id_t j
     return ImVec2(x, y);
 }
 
-k4a_float2_t BodyGeometry::point_to_color(k4a_float3_t point, int *valid)
+k4a_float2_t Euclid::point_to_color(k4a_float3_t point, int *valid)
 {
     k4a_float2_t pt2d;
     k4a_calibration_3d_to_2d(sensor_calibration,
@@ -403,7 +398,7 @@ k4a_float2_t BodyGeometry::point_to_color(k4a_float3_t point, int *valid)
     return pt2d;
 }
 
-ImVec2 BodyGeometry::joint_to_window(uint32_t body_id, k4abt_joint_id_t joint_id)
+ImVec2 Euclid::joint_to_window(uint32_t body_id, k4abt_joint_id_t joint_id)
 {
     int body_num = body_id_map[body_id];
     k4abt_body_t body = bodies[body_num];
@@ -426,7 +421,7 @@ ImVec2 BodyGeometry::joint_to_window(uint32_t body_id, k4abt_joint_id_t joint_id
     return fittedVector(x, y);
 }
 
-ImVec2 BodyGeometry::fittedVector(int x, int y)
+ImVec2 Euclid::fittedVector(int x, int y)
 {
     int x1 = x, y1 = y;
     if (x1 < (int)window_origin)
@@ -449,14 +444,14 @@ ImVec2 BodyGeometry::fittedVector(int x, int y)
     return ImVec2(x1, y1);
 }
 
-k4abt_joint_t BodyGeometry::get_joint(uint32_t body_id, k4abt_joint_id_t joint_id)
+k4abt_joint_t Euclid::get_joint(uint32_t body_id, k4abt_joint_id_t joint_id)
 {
     int body_num = this->body_id_map[body_id];
     k4abt_body_t body = this->bodies[body_num];
     return body.skeleton.joints[joint_id];
 }
 
-JointInfo BodyGeometry::get_joint_information(uint32_t body_id, k4abt_joint_id_t joint_id, int *valid)
+JointInfo Euclid::get_joint_information(uint32_t body_id, k4abt_joint_id_t joint_id, int *valid)
 {
     JointInfo jointInfo;
     int body_num = this->body_id_map[body_id];
@@ -481,7 +476,7 @@ JointInfo BodyGeometry::get_joint_information(uint32_t body_id, k4abt_joint_id_t
     return jointInfo;
 }
 
-bool BodyGeometry::is_thumb_pointing_upwards(uint32_t body_id)
+bool Euclid::is_thumb_pointing_upwards(uint32_t body_id)
 {
 
     k4abt_joint_t thumb = this->get_joint(body_id, K4ABT_JOINT_THUMB_RIGHT);
@@ -490,7 +485,7 @@ bool BodyGeometry::is_thumb_pointing_upwards(uint32_t body_id)
     return thumb.position.v[1] - hand.position.v[1] < 0.f;
 }
 
-k4a_float2_t BodyGeometry::window_to_point2d(ImVec2 window_point)
+k4a_float2_t Euclid::window_to_point2d(ImVec2 window_point)
 {
     float x = (window_point.x - this->window_origin) * (float)this->color_image_width / this->actual_image_size.x;
     float y = (window_point.y) * (float)this->color_image_height / this->actual_image_size.y;
@@ -499,7 +494,7 @@ k4a_float2_t BodyGeometry::window_to_point2d(ImVec2 window_point)
     return pt2d;
 }
 
-k4a_float3_t BodyGeometry::window_to_point(ImVec2 window_point)
+k4a_float3_t Euclid::window_to_point(ImVec2 window_point)
 {
     k4a_float2_t pt2d = this->window_to_point2d(window_point);
     k4a_float3_t pt3d;
@@ -509,7 +504,7 @@ k4a_float3_t BodyGeometry::window_to_point(ImVec2 window_point)
     return pt3d;
 }
 
-ImVec2 BodyGeometry::point_to_window(k4a_float3_t target)
+ImVec2 Euclid::point_to_window(k4a_float3_t target)
 {
 
     k4a_float2_t k4a_point_2d;
@@ -531,7 +526,7 @@ ImVec2 BodyGeometry::point_to_window(k4a_float3_t target)
     return fittedVector(x, y);
 }
 
-ImVec2 BodyGeometry::vector2f_to_window(Eigen::Vector2f point)
+ImVec2 Euclid::vector2f_to_window(Eigen::Vector2f point)
 {
     int x = point[0], y = point[1];
     x = x + (int)((point[0] / (float)this->color_image_width) * actual_image_size.x);
@@ -539,7 +534,7 @@ ImVec2 BodyGeometry::vector2f_to_window(Eigen::Vector2f point)
     return fittedVector(x, y);
 }
 
-ImVec2 BodyGeometry::vector_to_window(Eigen::Vector3f point)
+ImVec2 Euclid::vector_to_window(Eigen::Vector3f point)
 {
 
     k4a_float3_t target = {point[0], point[1], point[2]};
@@ -562,7 +557,7 @@ ImVec2 BodyGeometry::vector_to_window(Eigen::Vector3f point)
     return fittedVector(x, y);
 }
 
-Ray BodyGeometry::joint_to_ray(uint32_t body_id, k4abt_joint_id_t joint_id, k4a_float3_t target)
+Ray Euclid::joint_to_ray(uint32_t body_id, k4abt_joint_id_t joint_id, k4a_float3_t target)
 {
     int body_num = this->body_id_map[body_id];
     int joint_num = this->joint_id_map[joint_id];
@@ -580,7 +575,7 @@ Ray BodyGeometry::joint_to_ray(uint32_t body_id, k4abt_joint_id_t joint_id, k4a_
     return ray;
 }
 
-Ray BodyGeometry::joints_to_ray(uint32_t body_id, k4abt_joint_id_t from_joint_id, k4abt_joint_id_t to_joint_id, float delta)
+Ray Euclid::joints_to_ray(uint32_t body_id, k4abt_joint_id_t from_joint_id, k4abt_joint_id_t to_joint_id, float delta)
 {
     int body_num = this->body_id_map[body_id];
     int from_joint_num = this->joint_id_map[from_joint_id];
@@ -598,7 +593,7 @@ Ray BodyGeometry::joints_to_ray(uint32_t body_id, k4abt_joint_id_t from_joint_id
     return ray;
 }
 
-Ray BodyGeometry::joints_to_ray(uint32_t body_id, k4abt_joint_id_t from_joint_id, k4abt_joint_id_t to_joint_id, k4abt_joint_id_t tip_joint_id)
+Ray Euclid::joints_to_ray(uint32_t body_id, k4abt_joint_id_t from_joint_id, k4abt_joint_id_t to_joint_id, k4abt_joint_id_t tip_joint_id)
 {
     int body_num = this->body_id_map[body_id];
     int from_joint_num = this->joint_id_map[from_joint_id];
@@ -619,7 +614,7 @@ Ray BodyGeometry::joints_to_ray(uint32_t body_id, k4abt_joint_id_t from_joint_id
     return ray;
 }
 
-Eigen::Vector3f BodyGeometry::ray_to_joint_ortho(Ray ray, uint32_t body_id, k4abt_joint_id_t joint_id)
+Eigen::Vector3f Euclid::ray_to_joint_ortho(Ray ray, uint32_t body_id, k4abt_joint_id_t joint_id)
 {
     int body_num = this->body_id_map[body_id];
     k4abt_body_t body = this->bodies[body_num];
@@ -633,12 +628,12 @@ Eigen::Vector3f BodyGeometry::ray_to_joint_ortho(Ray ray, uint32_t body_id, k4ab
     return ortho;
 }
 
-int BodyGeometry::model_count()
+int Euclid::model_count()
 {
     return joint_to_world.size();
 }
 
-bool BodyGeometry::is_point_in_forward_space(k4a_float3_t point, vector<Ray> rays)
+bool Euclid::is_point_in_forward_space(k4a_float3_t point, vector<Ray> rays)
 {
 
     for (Ray ray : rays)
@@ -655,7 +650,7 @@ bool BodyGeometry::is_point_in_forward_space(k4a_float3_t point, vector<Ray> ray
     return false;
 }
 
-bool BodyGeometry::is_point_in_forward_space(k4a_float3_t point)
+bool Euclid::is_point_in_forward_space(k4a_float3_t point)
 {
     k4abt_joint_id_t from_joint_id = K4ABT_JOINT_ELBOW_RIGHT;
     k4abt_joint_id_t to_joint_id = K4ABT_JOINT_HAND_RIGHT;
@@ -684,7 +679,7 @@ bool BodyGeometry::is_point_in_forward_space(k4a_float3_t point)
     return false;
 }
 
-bool BodyGeometry::is_point_in_forward_space(k4a_float3_t point, k4abt_joint_id_t joint_id, bool is_x_positive)
+bool Euclid::is_point_in_forward_space(k4a_float3_t point, k4abt_joint_id_t joint_id, bool is_x_positive)
 {
     int joint_num = this->joint_id_map[joint_id];
 
@@ -711,15 +706,15 @@ bool BodyGeometry::is_point_in_forward_space(k4a_float3_t point, k4abt_joint_id_
     return false;
 }
 
-k4a_calibration_t *BodyGeometry::get_sensor_calibration()
+k4a_calibration_t *Euclid::get_sensor_calibration()
 {
         return this->sensor_calibration;
 }
-int BodyGeometry::get_color_image_width()
+int Euclid::get_color_image_width()
 {
     return this->color_image_width;
 }
-int BodyGeometry::get_color_image_height()
+int Euclid::get_color_image_height()
 {
     return this->color_image_height;
 }

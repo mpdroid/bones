@@ -18,7 +18,7 @@ namespace scene
     public:
         static AbstractScene *getInstance(char demo_mode);
         virtual void onLoopStart(int frame_number){};
-        virtual void capture(Kinector *kinector, BodyGeometry *body_geometry, int frame_number){};
+        virtual void capture(Kinector *kinector, Euclid *euclid, int frame_number){};
         virtual void render(ImDrawList *drawList, vector<int> bodies, float y_shift){};
         virtual void onLoopEnd(){};
     };
@@ -29,7 +29,7 @@ namespace scene
         LightSaberScene();
         ~LightSaberScene();
         void onLoopStart(int frame_number);
-        void capture(Kinector *kinector, BodyGeometry *body_geometry, int frame_number);
+        void capture(Kinector *kinector, Euclid *euclid, int frame_number);
         void render(ImDrawList *drawList, vector<int> bodies, float y_shift);
         void onLoopEnd();
 
@@ -43,7 +43,7 @@ namespace scene
         JointInfoScene();
         ~JointInfoScene();
         void onLoopStart(int frame_number);
-        void capture(Kinector *kinector, BodyGeometry *body_geometry, int frame_number);
+        void capture(Kinector *kinector, Euclid *euclid, int frame_number);
         void render(ImDrawList *drawList, vector<int> bodies, float y_shift);
         void onLoopEnd();
 
@@ -58,7 +58,7 @@ namespace scene
         WriteAirScene();
         ~WriteAirScene();
         void onLoopStart(int frame_number);
-        void capture(Kinector *kinector, BodyGeometry *body_geometry, int frame_number);
+        void capture(Kinector *kinector, Euclid *euclid, int frame_number);
         void render(ImDrawList *drawList, vector<int> bodies, float y_shift);
         void onLoopEnd();
 

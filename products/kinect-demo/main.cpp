@@ -1,29 +1,17 @@
 /*
-* Demonstrates kinect features.
+* Demonstrates Azure Kinect DK features.
 * Acknowledgements to following repos:
-* ....
-* TODO
-* - list repos
-* - stick to common method and variable naming convention
-* Actors
-*   - main
-*   - kinect_demo_viewer
-*   - controller
-    - scene
-        - saber
-        - writair
-        - thing-finder
-*   - kinector
-*   - euclid
 */
 
 using namespace std;
-
+#include "common.h"
 #include "controller.h"
 using namespace controller;
 
 int main()
 {
     Controller *controller = Controller::getInstance();
-    return controller->runLoop();
+    int retval = controller->runLoop();
+    cout << "so long..." << endl;
+    return retval;
 }

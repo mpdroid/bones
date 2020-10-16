@@ -39,7 +39,6 @@ void detect_objects(int frame_number,
     cilantro::PointCloud3f cloud_seg;
 
     vector<BoundingCube> pointCubes = clusterizer.Clusterize(&cloud_seg);
-    cout << "clusterized " << pointCubes.size() << endl;
     for (int c = 0; c < pointCubes.size(); c++)
     {
         BoundingCube *cube = &(pointCubes[c]);
@@ -77,14 +76,12 @@ void detect_objects(int frame_number,
     }
     if (pointCubes.size() > 0)
     {
-        cout << "num rays" << rays.size() << endl;
         for (Ray ray : rays)
         {
             int pointee;
             bool found = find_intersecting_cube(ray, &pointCubes, &pointee);
             if (found == true)
             {
-                cout << "found cube" << endl;
                 Detection detection;
                 detection.cube = pointCubes[pointee];
                 detection.ray = ray;
@@ -98,14 +95,14 @@ void detect_objects(int frame_number,
 
                 if (x1 < x)
                 {
-                    cout << " bad u v x in frame " << frame_number << " " << x << "," << x1 << endl;
+                    ERROR(" bad u v x in frame ", frame_number, " ", x, ",", x1);
                     int t = x;
                     x = x1;
                     x1 = t;
                 }
                 if (y1 < y)
                 {
-                    cout << " bad u v y in frame " << frame_number << " " << y << "," << y1 << endl;
+                    ERROR(" bad u v y in frame ", frame_number, " ", y, ",", y1);
                     int t = y;
                     y = y1;
                     y1 = t;
@@ -129,14 +126,14 @@ void detect_objects(int frame_number,
                         vq->SendAnalysisRequest(getenv("AZURE_VISION_KEY"), buff);
                         string name = vq->getTopObject();
                         TO_UPPER(name);
-                        cout << "detected " << name << " in frame " << detection.frame_number << endl;
+                        TRACE("detected ", name," in frame ",detection.frame_number);
                         detection.name = name;
 
                         detections->push_back(detection);
                     }
                     catch (const std::exception &e)
                     {
-                        std::cerr << e.what() << std::endl;
+                        ERROR(e.what());
                     }
                 }
             }
@@ -144,25 +141,25 @@ void detect_objects(int frame_number,
     }
 }
 
-void ThingFinderScene::capture(Kinector *kinector, BodyGeometry *body_geometry, int frame_number)
+void ThingFinderScene::capture(Kinector *kinector, Euclid *euclid, int frame_number)
 {
     cilantro::VectorSet3f cilantroPoints;
     cilantro::VectorSet3f cilantroColors;
     cilantro::PointCloud3f cloud_seg;
 
     vector<ImVec2> directionImVectors;
-    for (int k = 0; k < body_geometry->get_body_count(); k++)
+    for (int k = 0; k < euclid->get_body_count(); k++)
     {
 
-        Ray ray = body_geometry->joints_to_ray(k, K4ABT_JOINT_ELBOW_RIGHT, K4ABT_JOINT_HAND_RIGHT, 120.f);
+        Ray ray = euclid->joints_to_ray(k, K4ABT_JOINT_ELBOW_RIGHT, K4ABT_JOINT_HAND_RIGHT, 120.f);
         rays.push_back(ray);
-        ImVec2 pointerBeginObj = body_geometry->vector_to_window(ray.origin);
+        ImVec2 pointerBeginObj = euclid->vector_to_window(ray.origin);
         directionImVectors.push_back(pointerBeginObj);
 
         float delta = 200.f;
         k4a_float3_t target = {ray.origin[0] + ray.direction[0] * delta, ray.origin[1] + ray.direction[1] * delta,
                                ray.origin[2] + ray.direction[2] * delta};
-        ImVec2 pointerEndObj = body_geometry->point_to_window(target);
+        ImVec2 pointerEndObj = euclid->point_to_window(target);
         if (pointerEndObj.x == 0 && pointerEndObj.y == 0)
         {
             directionImVectors.push_back(pointerBeginObj);
@@ -183,25 +180,24 @@ void ThingFinderScene::capture(Kinector *kinector, BodyGeometry *body_geometry, 
 
     if (frame_number % FRAME_INTERVAL == 0)
     {
-        int point_count = kinector->GeneratePointCloud(body_geometry,
+        int point_count = kinector->GeneratePointCloud(euclid,
                                                        rays,
                                                        &cilantroPoints,
                                                        &cilantroColors);
         if (point_count > 100)
         {
-            cout << "point count " << point_count << " " << cilantroPoints.size() << endl;
             std::thread th1(detect_objects,
                             frame_number,
                             kinector->GetCVImage(),
                             cilantroPoints, cilantroColors,
                             rays, &detections,
                             kinector->GetCalibration(),
-                            body_geometry->get_color_image_width(),
-                            body_geometry->get_color_image_height());
+                            euclid->get_color_image_width(),
+                            euclid->get_color_image_height());
             th1.detach();
         }
     }
-        for (Detection detection : detections)
+    for (Detection detection : detections)
     {
         vector<ImVec2> bboxes;
         Vector3f ftl = detection.cube.ftl;
@@ -216,23 +212,22 @@ void ThingFinderScene::capture(Kinector *kinector, BodyGeometry *body_geometry, 
         CubeWidget cubeWidget;
         cubeWidget.frameNumber = detection.frame_number;
         cubeWidget.color = {detection.cube.color[0], detection.cube.color[1], detection.cube.color[2]};
-        cubeWidget.ftl = body_geometry->vector_to_window(ftl);
-        cubeWidget.ftr = body_geometry->vector_to_window(ftr);
-        cubeWidget.fbr = body_geometry->vector_to_window(fbr);
-        cubeWidget.fbl = body_geometry->vector_to_window(fbl);
-        cubeWidget.btl = body_geometry->vector_to_window(btl);
-        cubeWidget.btr = body_geometry->vector_to_window(btr);
-        cubeWidget.bbr = body_geometry->vector_to_window(bbr);
-        cubeWidget.bbl = body_geometry->vector_to_window(bbl);
+        cubeWidget.ftl = euclid->vector_to_window(ftl);
+        cubeWidget.ftr = euclid->vector_to_window(ftr);
+        cubeWidget.fbr = euclid->vector_to_window(fbr);
+        cubeWidget.fbl = euclid->vector_to_window(fbl);
+        cubeWidget.btl = euclid->vector_to_window(btl);
+        cubeWidget.btr = euclid->vector_to_window(btr);
+        cubeWidget.bbr = euclid->vector_to_window(bbr);
+        cubeWidget.bbl = euclid->vector_to_window(bbl);
         cubeWidget.name = detection.name;
         cubeWidgets.push_back(cubeWidget);
 
-        ImVec2 top_left = body_geometry->vector_to_window(detection.cube.u);
-        ImVec2 bottom_right = body_geometry->vector_to_window(detection.cube.v);
-        ImVec2 rayStart = body_geometry->vector_to_window(detection.ray.origin);
-        ImVec2 rayEnd = body_geometry->point_to_window(detection.cube.pointer[1]);
+        // ImVec2 top_left = euclid->vector_to_window(detection.cube.u);
+        // ImVec2 bottom_right = euclid->vector_to_window(detection.cube.v);
+        // ImVec2 rayStart = euclid->vector_to_window(detection.ray.origin);
+        // ImVec2 rayEnd = euclid->point_to_window(detection.cube.pointer[1]);
     }
-
 }
 
 void ThingFinderScene::render(ImDrawList *drawList, vector<int> bodies, float y_shift)

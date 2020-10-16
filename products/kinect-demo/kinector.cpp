@@ -32,7 +32,6 @@ Kinector::Kinector(
                      calibration->depth_camera_calibration.resolution_height,
                      calibration->depth_camera_calibration.resolution_width * (int)sizeof(k4a_float2_t),
                      &xy_table);
-    cout << "pt 3" << endl;
 
     CreateXYTable(xy_table);
 
@@ -41,7 +40,6 @@ Kinector::Kinector(
                      calibration->depth_camera_calibration.resolution_height,
                      calibration->depth_camera_calibration.resolution_width * (int)sizeof(k4a_float3_t),
                      &point_cloud);
-    cout << "pt 4" << endl;
 
     is_valid = true;
 }
@@ -181,8 +179,8 @@ void Kinector::CreateXYTable(k4a_image_t xy_table)
 
     int camerawidth = calibration->color_camera_calibration.resolution_width;
     int cameraheight = calibration->color_camera_calibration.resolution_height;
-    cout << "Depth camera size" << width << " " << height << endl;
-    cout << "Color camera size" << camerawidth << " " << cameraheight << endl;
+    TRACE("Depth camera size", width , " " , height);
+    TRACE("Color camera size", camerawidth, " ", cameraheight);
     k4a_float2_t p;
     k4a_float3_t ray;
     int valid;
@@ -210,57 +208,13 @@ void Kinector::CreateXYTable(k4a_image_t xy_table)
         }
     }
 }
-
-void Kinector::create_xy_table(const k4a_calibration_t *calibration, k4a_image_t xy_table)
-{
-    k4a_float2_t *table_data = (k4a_float2_t *)(void *)k4a_image_get_buffer(xy_table);
-
-    int width = calibration->depth_camera_calibration.resolution_width;
-    int height = calibration->depth_camera_calibration.resolution_height;
-
-    int camerawidth = calibration->color_camera_calibration.resolution_width;
-    int cameraheight = calibration->color_camera_calibration.resolution_height;
-    cout << "Depth camera size" << width << " " << height << endl;
-    cout << "Color camera size" << camerawidth << " " << cameraheight << endl;
-    k4a_float2_t p;
-    k4a_float3_t ray;
-    int valid;
-
-    for (int y = 0, idx = 0; y < height; y++)
-    {
-        p.xy.y = (float)y;
-        for (int x = 0; x < width; x++, idx++)
-        {
-            p.xy.x = (float)x;
-
-            k4a_calibration_2d_to_3d(
-                calibration, &p, 1.f, K4A_CALIBRATION_TYPE_DEPTH, K4A_CALIBRATION_TYPE_DEPTH, &ray, &valid);
-
-            if (valid)
-            {
-                table_data[idx].xy.x = ray.xyz.x;
-                table_data[idx].xy.y = ray.xyz.y;
-            }
-            else
-            {
-                table_data[idx].xy.x = nanf("");
-                table_data[idx].xy.y = nanf("");
-            }
-        }
-    }
-}
-
-// TODO add comments
-// TODO build Clusterizer inside
-// TODO add point count to clusterizer
 
 int Kinector::GeneratePointCloud(
-    BodyGeometry *body_geometry,
+    Euclid *euclid,
     vector<Ray> rays,
     cilantro::VectorSet3f *cilantroPoints,
     cilantro::VectorSet3f *cilantroColors)
 {
-    cout << "generating point cloud" << endl;
     int width = k4a_image_get_width_pixels(depthImage.handle());
     int height = k4a_image_get_height_pixels(depthImage.handle());
     uint16_t *depth_data = (uint16_t *)(void *)k4a_image_get_buffer(depthImage.handle());
@@ -286,7 +240,7 @@ int Kinector::GeneratePointCloud(
             float y = (xy_table_data[i].xy.y * (float)depth_data[i]);
             float z = (float)depth_data[i];
             k4a_float3_t point = {x, y, z};
-            if (!body_geometry->is_point_in_forward_space(point, rays))
+            if (!euclid->is_point_in_forward_space(point, rays))
             {
                 continue;
             }
@@ -295,8 +249,7 @@ int Kinector::GeneratePointCloud(
             filtered_point_count++;
         }
     }
-
-    cout << "selected points " << filtered_point_count << "/" << total_point_count << endl;
+    TRACE("selected points ", filtered_point_count, "/", total_point_count);
     if (filtered_point_count > 0)
     {
 
@@ -317,96 +270,6 @@ int Kinector::GeneratePointCloud(
     return filtered_point_count;
 }
 
-void Kinector::generate_point_cloud(const k4a_image_t depth_image,
-                                    k4a_image_t transformed_color_image,
-                                    const k4a_image_t xy_table,
-                                    BodyGeometry *body_geometry,
-                                    vector<Ray> rays,
-                                    cilantro::VectorSet3f &cilantroPoints,
-                                    cilantro::VectorSet3f &cilantroColors,
-                                    int *point_count)
-{
-    int width = k4a_image_get_width_pixels(depth_image);
-    int height = k4a_image_get_height_pixels(depth_image);
-    uint16_t *depth_data = (uint16_t *)(void *)k4a_image_get_buffer(depth_image);
-    k4a_float2_t *xy_table_data = (k4a_float2_t *)(void *)k4a_image_get_buffer(xy_table);
-    const uint8_t *buf = (uint8_t *)(void *)k4a_image_get_buffer(transformed_color_image);
-
-    // TODO 3 lines possibly remove
-    int len = static_cast<unsigned int>(k4a_image_get_size(transformed_color_image));
-    uint8_t *bufcpy = new uint8_t[len];
-    memcpy(bufcpy, buf, len);
-
-    viewer::BgraPixel *pixels = reinterpret_cast<viewer::BgraPixel *>(bufcpy);
-    vector<k4a_float3_t> pointsOfInterest;
-    vector<k4a_float3_t> colors;
-    int total = 0;
-    for (int i = 0; i < width * height; i++)
-    {
-        if (depth_data[i] != 0 && !isnan(xy_table_data[i].xy.x) && !isnan(xy_table_data[i].xy.y))
-        {
-            total++;
-            float x = (xy_table_data[i].xy.x * (float)depth_data[i]);
-            float y = (xy_table_data[i].xy.y * (float)depth_data[i]);
-            float z = (float)depth_data[i];
-            k4a_float3_t point = {x, y, z};
-            if (!body_geometry->is_point_in_forward_space(point, rays))
-            {
-                continue;
-            }
-            pointsOfInterest.push_back(point);
-            colors.push_back({(float)pixels[i].Red, (float)pixels[i].Green, (float)pixels[i].Blue});
-            *point_count += 1;
-        }
-    }
-
-    cout << "selected points " << *point_count << "/" << total << endl;
-    if (*point_count > 0)
-    {
-
-        cilantroPoints.resize(3, *point_count);
-        cilantroColors.resize(3, *point_count);
-        for (int i = 0; i < *point_count; i++)
-        {
-            k4a_float3_t point = pointsOfInterest[i];
-            k4a_float3_t color = colors[i];
-            cilantroPoints(0, i) = point.v[0] / 1000.f;
-            cilantroPoints(1, i) = point.v[1] / 1000.f;
-            cilantroPoints(2, i) = point.v[2] / 1000.f;
-            cilantroColors(0, i) = color.v[0] / 255.f;
-            cilantroColors(1, i) = color.v[1] / 255.f;
-            cilantroColors(2, i) = color.v[2] / 255.f;
-        }
-    }
-}
-
-bool Kinector::colorize_point_cloud(k4a_transformation_t transformation_handle,
-                                    const k4a_image_t depth_image,
-                                    const k4a_image_t color_image,
-                                    k4a_image_t *transformed_color_image)
-{
-    int depth_image_width_pixels = k4a_image_get_width_pixels(depth_image);
-    int depth_image_height_pixels = k4a_image_get_height_pixels(depth_image);
-    if (K4A_RESULT_SUCCEEDED != k4a_image_create(K4A_IMAGE_FORMAT_COLOR_BGRA32,
-                                                 depth_image_width_pixels,
-                                                 depth_image_height_pixels,
-                                                 depth_image_width_pixels * 4 * (int)sizeof(uint8_t),
-                                                 transformed_color_image))
-    {
-        printf("Failed to create transformed color image\n");
-        return false;
-    }
-
-    if (K4A_RESULT_SUCCEEDED != k4a_transformation_color_image_to_depth_camera(transformation_handle,
-                                                                               depth_image,
-                                                                               color_image,
-                                                                               *transformed_color_image))
-    {
-        printf("Failed to compute transformed color image\n");
-        return false;
-    }
-    return true;
-}
 
 bool Kinector::ColorizePointCloud(const k4a_image_t depth_image,
                                   const k4a_image_t color_image,
@@ -420,7 +283,7 @@ bool Kinector::ColorizePointCloud(const k4a_image_t depth_image,
                                                  depth_image_width_pixels * 4 * (int)sizeof(uint8_t),
                                                  transformed_color_image))
     {
-        printf("Failed to create transformed color image\n");
+        ERROR("Failed to create transformed color image");
         return false;
     }
 
@@ -429,7 +292,7 @@ bool Kinector::ColorizePointCloud(const k4a_image_t depth_image,
                                                                                color_image,
                                                                                *transformed_color_image))
     {
-        printf("Failed to compute transformed color image\n");
+        ERROR("Failed to compute transformed color image");
         return false;
     }
     return true;

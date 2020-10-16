@@ -31,9 +31,9 @@ add_executable(favorite-things
     euclid.cpp
     controller.cpp
     kinector.cpp
-    scene.cpp
-    scene_writair.cpp
-    thingfinder.cpp)
+    scene/scene.cpp
+    scene/writair.cpp
+    scene/thingfinder.cpp)
 
 
 target_link_libraries(favorite-things PRIVATE

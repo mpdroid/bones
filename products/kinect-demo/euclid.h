@@ -51,10 +51,10 @@ struct BoundingPlane {
     Eigen::Vector3f center;
 };
 
-class BodyGeometry
+class Euclid
 {
 public:
-    BodyGeometry(
+    Euclid(
         k4a_calibration_t *sensor_calibration,
         const float window_origin,
         const ImVec2 window_size,
@@ -64,7 +64,7 @@ public:
         k4abt_joint_id_t pointer_joint_id,
         vector<k4abt_body_t> bodies,
         vector<k4abt_joint_id_t> joint_ids);
-    ~BodyGeometry();
+    ~Euclid();
     k4a_float3_t joint_to_global(uint32_t body_id, k4abt_joint_id_t joint_id, k4a_float3_t target);
     ImVec2 joint_target_to_window(uint32_t body_id, k4abt_joint_id_t joint_id, k4a_float3_t target);
     ImVec2 joint_to_window(uint32_t body_id, k4abt_joint_id_t joint_id);

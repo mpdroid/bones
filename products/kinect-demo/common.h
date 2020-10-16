@@ -1,5 +1,7 @@
 #ifndef __COMMON_H
 #define __COMMON_H
+
+#include <iostream>
 #define DEMO_MODE_OBJECT_DETECTION 'O'
 #define DEMO_MODE_LIGHT_SABERS 'L'
 #define DEMO_MODE_JOINT_INFO 'J'
@@ -22,5 +24,36 @@ struct RunTimeConfig
 
 #define TO_UPPER(str) \
     std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+
+// Tracing based on https://stackoverflow.com/questions/29326460/how-to-make-a-variadic-macro-for-stdcout
+#define TRACING true
+
+template <typename... Args>
+void trace(const Args &... args)
+{
+    (std::cout << ... << args);
+}
+
+#define TRACE(...)                  \
+    if (TRACING == true)            \
+    {                               \
+        trace("TRACE", ": ",__FILE__, ",",__FUNCTION__,",",__LINE__ ,": "); \
+        trace( __VA_ARGS__); \
+        trace("\n"); \
+    }
+
+#define INFO(...) \
+    {                               \
+        trace("INFO", ": ",__FILE__, ",",__FUNCTION__,",",__LINE__ ,": "); \
+        trace( __VA_ARGS__); \
+        trace("\n"); \
+    }
+
+#define ERROR(...) \
+    {                               \
+        trace("ERROR", ": ",__FILE__, ",",__FUNCTION__,",",__LINE__ ,": "); \
+        trace( __VA_ARGS__); \
+        trace("\n"); \
+    }
 
 #endif

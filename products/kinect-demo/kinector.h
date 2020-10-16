@@ -36,7 +36,7 @@ namespace kinector
             const k4a_image_t depth_image,
             const k4a_image_t color_image,
             k4a_image_t *transformed_color_image);
-        int GeneratePointCloud(BodyGeometry *body_geometry,
+        int GeneratePointCloud(Euclid *euclid,
                                vector<Ray> rays,
                                cilantro::VectorSet3f *cilantroPoints,
                                cilantro::VectorSet3f *cilantroColors);
@@ -45,7 +45,7 @@ namespace kinector
         static void generate_point_cloud(const k4a_image_t depth_image,
                                          k4a_image_t transformed_color_image,
                                          const k4a_image_t xy_table,
-                                         BodyGeometry *body_geometry,
+                                         Euclid *euclid,
                                          vector<Ray> rays,
                                          cilantro::VectorSet3f &cilantroPoints,
                                          cilantro::VectorSet3f &cilantroColors,

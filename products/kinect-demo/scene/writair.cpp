@@ -11,25 +11,23 @@ WriteAirScene::WriteAirScene()
 
 WriteAirScene::~WriteAirScene()
 {
-    cout << "destroying " << endl;
 }
 
 void WriteAirScene::onLoopStart(int frame_number)
 {
-    cout << "started loop" << endl;
 }
 
-void WriteAirScene::capture(Kinector *kinector, BodyGeometry *body_geometry, int frame_number)
+void WriteAirScene::capture(Kinector *kinector, Euclid *euclid, int frame_number)
 {
-    for (int k = 0; k < body_geometry->get_body_count(); k++)
+    for (int k = 0; k < euclid->get_body_count(); k++)
     {
 
-        k4a_float3_t left_hand = body_geometry->joint_to_global(k, K4ABT_JOINT_HAND_LEFT, {0.f, 0.f, 0.f});
-        k4a_float3_t left_hand_act = body_geometry->get_joint(k, K4ABT_JOINT_HAND_LEFT).position;
-        k4a_float3_t nose = body_geometry->joint_to_global(k, K4ABT_JOINT_NOSE, {0.f, 0.f, 0.f});
-        k4a_float3_t tip = body_geometry->joint_to_global(k, K4ABT_JOINT_THUMB_RIGHT, {0.f, 0.f, 0.f});
-        k4a_float3_t hand = body_geometry->joint_to_global(k, K4ABT_JOINT_HAND_RIGHT, {0.f, 0.f, 0.f});
-        ImVec2 tip_vec = body_geometry->point_to_window(tip);
+        k4a_float3_t left_hand = euclid->joint_to_global(k, K4ABT_JOINT_HAND_LEFT, {0.f, 0.f, 0.f});
+        k4a_float3_t left_hand_act = euclid->get_joint(k, K4ABT_JOINT_HAND_LEFT).position;
+        k4a_float3_t nose = euclid->joint_to_global(k, K4ABT_JOINT_NOSE, {0.f, 0.f, 0.f});
+        k4a_float3_t tip = euclid->joint_to_global(k, K4ABT_JOINT_THUMB_RIGHT, {0.f, 0.f, 0.f});
+        k4a_float3_t hand = euclid->joint_to_global(k, K4ABT_JOINT_HAND_RIGHT, {0.f, 0.f, 0.f});
+        ImVec2 tip_vec = euclid->point_to_window(tip);
 
         Vector3f lh, rh, diff;
         lh << left_hand.v[0], left_hand.v[1], left_hand.v[2];
@@ -37,7 +35,6 @@ void WriteAirScene::capture(Kinector *kinector, BodyGeometry *body_geometry, int
         diff = lh - rh;
         if (diff.norm() < 100.f)
         {
-            cout << "Erasing" << endl;
             letterWidgets.clear();
             if (writeMode == 1)
             {
@@ -56,7 +53,6 @@ void WriteAirScene::capture(Kinector *kinector, BodyGeometry *body_geometry, int
         int currentLetterIndex = letterWidgets.size() - 1;
         currentLetter = letterWidgets[currentLetterIndex];
 
-        // cout << nose.v[1] << " " << left_hand.v[1] << " " << left_hand_act.v[1] << endl;
         if (nose.v[1] > left_hand.v[1])
         {
             writeMode = 1;
@@ -77,7 +73,6 @@ void WriteAirScene::capture(Kinector *kinector, BodyGeometry *body_geometry, int
             if (frame_number % WRITE_INTERVAL == 0)
             {
                 letterWidgets[currentLetterIndex].letterPath.push_back(tip_vec);
-                cout << "num points for letter " << letterWidgets[currentLetterIndex].letterPath.size() << endl;
             }
         }
         if (writeMode == 2)
@@ -85,8 +80,6 @@ void WriteAirScene::capture(Kinector *kinector, BodyGeometry *body_geometry, int
             writeMode = 0;
             if (letterWidgets[currentLetterIndex].letterPath.size() > 0)
             {
-                cout << "total num points for letter " << letterWidgets[currentLetterIndex].letterPath.size() << endl;
-                cout << "total number  of letters " << letterWidgets.size() << endl;
                 LetterWidget nextLetter;
                 nextLetter.boxType = 2;
                 letterWidgets.push_back(nextLetter);

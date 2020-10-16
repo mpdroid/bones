@@ -29,8 +29,8 @@ using namespace linmath;
 #include "kinector.h"
 using namespace kinector;
 
-#include "scene.h"
-#include "thingfinder.h"
+#include "scene/scene.h"
+#include "scene/thingfinder.h"
 using namespace scene;
 
 
@@ -56,6 +56,7 @@ namespace controller
         Controller() {}
         Controller(const Controller &);
         Controller &operator=(const Controller &);
+        ~Controller();
         RunTimeConfig runtimeConfig;
         AbstractScene *scene;
     };

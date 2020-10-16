@@ -19,35 +19,29 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     {
-        printf("Escape key pressed\n");
         (*RUNTIMECONFIG).time_to_go = true;
     }
     if (key == GLFW_KEY_D && action == GLFW_PRESS)
     {
-        printf("Toggling depth image\n");
         (*RUNTIMECONFIG).show_depth_image = !(*RUNTIMECONFIG).show_depth_image;
     }
     if (key == GLFW_KEY_L && action == GLFW_PRESS)
     {
-        printf("Switching to light saber display\n");
         (*RUNTIMECONFIG).demo_mode = DEMO_MODE_LIGHT_SABERS;
         SCENE_SWITCH_INDICATOR = GLFW_KEY_L;
     }
     if (key == GLFW_KEY_O && action == GLFW_PRESS)
     {
-        printf("Switching to object detection\n");
         (*RUNTIMECONFIG).demo_mode = DEMO_MODE_OBJECT_DETECTION;
         SCENE_SWITCH_INDICATOR = GLFW_KEY_O;
     }
     if (key == GLFW_KEY_J && action == GLFW_PRESS)
     {
-        printf("Switching to joint information\n");
         (*RUNTIMECONFIG).demo_mode = DEMO_MODE_JOINT_INFO;
         SCENE_SWITCH_INDICATOR = GLFW_KEY_J;
     }
     if (key == GLFW_KEY_W && action == GLFW_PRESS)
     {
-        printf("Switching to writing mode\n");
         (*RUNTIMECONFIG).demo_mode = DEMO_MODE_WRITING;
         SCENE_SWITCH_INDICATOR = GLFW_KEY_W;
     }
@@ -83,7 +77,7 @@ int Controller::runLoop()
         dev.start_cameras(&kinect_config);
 
         KinectDemoViewer window = KinectDemoViewer::Instance();
-        cout << "initializing window" << endl;
+        INFO("initializing window");
         window.Initialize(
             "Kinect DK Demo",
             1280,
@@ -98,7 +92,7 @@ int Controller::runLoop()
         Kinector kinector(&kinect_config, &dev);
         if (kinector.isValid() == false)
         {
-            printf("Kinect init failed!\n");
+            ERROR("Kinect init failed!");
             exit(1);
         }
 
@@ -108,14 +102,13 @@ int Controller::runLoop()
         {
             if (SCENE_SWITCH_INDICATOR != 'Z')
             {
-                cout << "scene switched " << endl;
                 delete this->scene;
                 this->scene = AbstractScene::getInstance(SCENE_SWITCH_INDICATOR);
                 SCENE_SWITCH_INDICATOR = 'Z';
             }
             this->scene->onLoopStart(frame_number);
             std::vector<BgraPixel> depthTextureBuffer;
-            BodyGeometry *body_geometry;
+            Euclid *euclid;
 
             window.ComputeDimensions();
 
@@ -127,7 +120,7 @@ int Controller::runLoop()
                 kinector.InitializeFrame(capture);
                 if (kinector.isValid() == false)
                 {
-                    printf("Failed to initialize kinect in frame\n");
+                    ERROR("Failed to initialize kinect in frame");
                     break;
                 }
                 vector<k4abt_joint_id_t> joints_of_interest = {
@@ -144,19 +137,19 @@ int Controller::runLoop()
                 {
                     moving_average.resize((int)num_bodies);
                 }
-                body_geometry = new BodyGeometry(kinector.GetCalibration(), window.GetColorWindowOrigin(),
+                euclid = new Euclid(kinector.GetCalibration(), window.GetColorWindowOrigin(),
                                                  window.GetColorWindowSize(), kinector.GetColorImageWidth(), kinector.GetColorImageHeight(),
                                                  &moving_average, K4ABT_JOINT_KNEE_LEFT,
                                                  kinector.GetBodies(),
                                                  joints_of_interest);
                 if ((*RUNTIMECONFIG).demo_mode == DEMO_MODE_OBJECT_DETECTION)
                 {
-                    body_geometry = new BodyGeometry(kinector.GetCalibration(), window.GetColorWindowOrigin(),
+                    euclid = new Euclid(kinector.GetCalibration(), window.GetColorWindowOrigin(),
                                                      window.GetColorWindowSize(), kinector.GetColorImageWidth(), kinector.GetColorImageHeight(), &moving_average, K4ABT_JOINT_HANDTIP_RIGHT,
                                                      kinector.GetBodies(),
                                                      joints_of_interest);
                 }
-                this->scene->capture(&kinector, body_geometry, frame_number);
+                this->scene->capture(&kinector, euclid, frame_number);
 
                 vector<Ray> rays;
                 if ((*RUNTIMECONFIG).demo_mode == DEMO_MODE_OBJECT_DETECTION)
@@ -179,7 +172,7 @@ int Controller::runLoop()
                         window.ColorizeFilteredDepthImage(kinector.GetDepthImage(),
                                                           kinector.GetColorizedDepthImage(),
                                                           kinector.GetXYTable(),
-                                                          body_geometry,
+                                                          euclid,
                                                           rays,
                                                           K4ADepthPixelColorizer::ColorizeBlueToRed,
                                                           GetDepthModeRange(kinect_config.depth_mode),
@@ -195,7 +188,7 @@ int Controller::runLoop()
                 }
 
 
-                delete body_geometry;
+                delete euclid;
             }
             colorTexture.Update(kinector.GetPixels());
             kinector.ReleaseFrame();
@@ -223,7 +216,7 @@ int Controller::runLoop()
     }
     catch (const std::exception &e)
     {
-        std::cerr << e.what() << std::endl;
+        ERROR(e.what());
         std::cerr << "Press [enter] to exit." << std::endl;
         std::cin.get();
         return 1;

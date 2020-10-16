@@ -4,6 +4,8 @@
 #include <iostream>
 #include <string>
 
+// Taken from https://github.com/deercoder/cpprestsdk-example
+
 /**
 https://westus.api.cognitive.microsoft.com/vision/v1.0/analyze[?visualFeatures][&details][&language]
 

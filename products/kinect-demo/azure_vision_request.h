@@ -9,7 +9,7 @@ using namespace concurrency::streams;
 
 #pragma once
 
-// https://github.com/deercoder/cpprestsdk-example
+// Taken from https://github.com/deercoder/cpprestsdk-example
 
 class AzureVisionRequest
 {

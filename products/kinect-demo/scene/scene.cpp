@@ -33,12 +33,10 @@ LightSaberScene::LightSaberScene()
 
 LightSaberScene::~LightSaberScene()
 {
-    cout << "destroying " << endl;
 }
 
 void LightSaberScene::onLoopStart(int frame_number)
 {
-    cout << "started loop" << endl;
     lightSabers.erase(
         std::remove_if(lightSabers.begin(), lightSabers.end(),
                        [&](const PointerWidget lightSaber) { return (frame_number - 5) > lightSaber.frameNumber; }),
@@ -46,13 +44,11 @@ void LightSaberScene::onLoopStart(int frame_number)
     return;
 }
 
-void LightSaberScene::capture(Kinector *kinector, BodyGeometry *body_geometry, int frame_number)
+void LightSaberScene::capture(Kinector *kinector, Euclid *euclid, int frame_number)
 {
-        cout << "started capture" <<  body_geometry->get_body_count() << endl;
     vector<PointerWidget> newSabers;
-    for (int k = 0; k < body_geometry->get_body_count(); k++)
+    for (int k = 0; k < euclid->get_body_count(); k++)
     {
-        cout << "started capture" << endl;
         int lastSaberIndex = -1;
         for (int l = lightSabers.size() - 1; l >= 0; l--)
         {
@@ -62,14 +58,13 @@ void LightSaberScene::capture(Kinector *kinector, BodyGeometry *body_geometry, i
                 break;
             }
         }
-        cout << "last saber for body " << k << " " << lastSaberIndex << endl;
 
-        Ray ray = body_geometry->joints_to_ray(k, K4ABT_JOINT_ELBOW_RIGHT, K4ABT_JOINT_HAND_RIGHT, K4ABT_JOINT_HAND_RIGHT);
+        Ray ray = euclid->joints_to_ray(k, K4ABT_JOINT_ELBOW_RIGHT, K4ABT_JOINT_HAND_RIGHT, K4ABT_JOINT_HAND_RIGHT);
 
-        Vector3f ortho = body_geometry->ray_to_joint_ortho(ray, k, K4ABT_JOINT_THUMB_RIGHT);
+        Vector3f ortho = euclid->ray_to_joint_ortho(ray, k, K4ABT_JOINT_THUMB_RIGHT);
         // rays.push_back(ray);
-        // ImVec2 pointerBeginObj = body_geometry->vector_to_window(ray.origin);
-        ImVec2 pointerBeginObj = body_geometry->joint_to_window(k, K4ABT_JOINT_HAND_RIGHT);
+        // ImVec2 pointerBeginObj = euclid->vector_to_window(ray.origin);
+        ImVec2 pointerBeginObj = euclid->joint_to_window(k, K4ABT_JOINT_HAND_RIGHT);
 
         PointerWidget lightSaber;
         // lightSaber.boxType = 4;
@@ -79,7 +74,7 @@ void LightSaberScene::capture(Kinector *kinector, BodyGeometry *body_geometry, i
 
         lightSaber.arrow.push_back(pointerBeginObj);
 
-        ImVec2 pointerEndObj = body_geometry->vector_to_window(ray.origin + ortho * 800.f);
+        ImVec2 pointerEndObj = euclid->vector_to_window(ray.origin + ortho * 800.f);
         lightSaber.arrow.push_back(pointerEndObj);
 
         if (lastSaberIndex > -1)
@@ -115,7 +110,6 @@ void LightSaberScene::capture(Kinector *kinector, BodyGeometry *body_geometry, i
         }
     }
     lightSabers.insert(lightSabers.end(), newSabers.begin(), newSabers.end());
-    cout << "num sabers" << lightSabers.size();
     return;
 }
 
@@ -139,7 +133,6 @@ void LightSaberScene::render(ImDrawList *drawList, vector<int> bodies, float y_s
         for (int bodyId : bodies)
         {
             vector<PointerWidget> sabers = lightSabersByBody[bodyId];
-            cout << "body id" << bodyId << "num sabers" << sabers.size() << endl;
             ;
             int n = sabers.size();
             float b = pow(200.f, 1.f / (float)n);
@@ -147,9 +140,6 @@ void LightSaberScene::render(ImDrawList *drawList, vector<int> bodies, float y_s
             {
                 int alpha = (int)(pow(b, i) - 1.f);
                 vector<ImU32> colors = {IM_COL32(255, 69, 0, alpha), IM_COL32(128, 255, 0, alpha)};
-                // cout << " num vectors for saber " << i << " " << sabers[i].directionVectors.size() << alpha << endl;
-                cout << "saber id" << i << "num arrows" << sabers[i].arrow.size() << endl;
-                ;
                 for (int j = 0; j < sabers[i].arrow.size(); j++)
                 {
                     sabers[i].arrow[j].y += y_shift;
@@ -168,7 +158,6 @@ void LightSaberScene::render(ImDrawList *drawList, vector<int> bodies, float y_s
 
 void LightSaberScene::onLoopEnd()
 {
-    cout << "ended loop" << endl;
 }
 
 /*****************************************************************/
@@ -181,17 +170,15 @@ JointInfoScene::JointInfoScene()
 
 JointInfoScene::~JointInfoScene()
 {
-    cout << "destroying " << endl;
 }
 
 void JointInfoScene::onLoopStart(int frame_number)
 {
-    cout << "started loop" << endl;
     jointWidgets.clear();
     axisWidgets.clear();
 }
 
-void JointInfoScene::capture(Kinector *kinector, BodyGeometry *body_geometry, int frame_number)
+void JointInfoScene::capture(Kinector *kinector, Euclid *euclid, int frame_number)
 {
     AxisWidget axisItem;
     axisItem.name = "Depth Camera";
@@ -199,24 +186,24 @@ void JointInfoScene::capture(Kinector *kinector, BodyGeometry *body_geometry, in
     axisItem.boxType = 5;
     axisItem.frameNumber = frame_number;
     axisItem.textCoordinates = ImVec2(100.f, 75.f);
-    k4a_float3_t origin = body_geometry->window_to_point(ImVec2(100.f, 100.f));
+    k4a_float3_t origin = euclid->window_to_point(ImVec2(100.f, 100.f));
     Eigen::Vector3f depth_zero, depth_x, depth_y, depth_z;
     depth_zero << origin.v[0], origin.v[1], origin.v[2];
     depth_x << origin.v[0] + 3.f, origin.v[1], origin.v[2];
     depth_y << origin.v[0], origin.v[1] + 3.f, origin.v[2];
     depth_z << origin.v[0], origin.v[1], origin.v[2] + 3.f;
-    ImVec2 pointerBeginObj = body_geometry->vector_to_window(depth_zero);
+    ImVec2 pointerBeginObj = euclid->vector_to_window(depth_zero);
     axisItem.x.push_back(pointerBeginObj);
-    axisItem.x.push_back(body_geometry->vector_to_window(depth_x));
+    axisItem.x.push_back(euclid->vector_to_window(depth_x));
     axisItem.y.push_back(pointerBeginObj);
-    axisItem.y.push_back(body_geometry->vector_to_window(depth_y));
+    axisItem.y.push_back(euclid->vector_to_window(depth_y));
     axisItem.z.push_back(pointerBeginObj);
-    axisItem.z.push_back(body_geometry->vector_to_window(depth_z));
+    axisItem.z.push_back(euclid->vector_to_window(depth_z));
     axisItem.color = {0, 0, 0};
     axisItem.textShadowColor = {255, 255, 255};
     axisWidgets.push_back(axisItem);
 
-    for (int k = 0; k < body_geometry->get_body_count(); k++)
+    for (int k = 0; k < euclid->get_body_count(); k++)
     {
         vector<k4abt_joint_id_t> joint_ids = {
             K4ABT_JOINT_HANDTIP_LEFT,
@@ -225,7 +212,7 @@ void JointInfoScene::capture(Kinector *kinector, BodyGeometry *body_geometry, in
         for (k4abt_joint_id_t joint_id : joint_ids)
         {
             int valid = 0;
-            JointInfo jointInfo = body_geometry->get_joint_information(k, joint_id, &valid);
+            JointInfo jointInfo = euclid->get_joint_information(k, joint_id, &valid);
             if (valid == 1)
             {
                 JointWidget jointDisplay;
@@ -240,7 +227,6 @@ void JointInfoScene::capture(Kinector *kinector, BodyGeometry *body_geometry, in
 
 void JointInfoScene::render(ImDrawList *drawList, vector<int> bodies, float y_shift)
 {
-    cout << "started render" << endl;
     for (int i = 0; i < axisWidgets.size(); i++)
     {
         AxisWidget axis = axisWidgets[i];
@@ -332,7 +318,6 @@ void JointInfoScene::render(ImDrawList *drawList, vector<int> bodies, float y_sh
 
 void JointInfoScene::onLoopEnd()
 {
-    cout << "ended loop" << endl;
     jointWidgets.clear();
     axisWidgets.clear();
 }
