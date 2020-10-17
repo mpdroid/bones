@@ -17,7 +17,7 @@ struct RunTimeConfig
 {
     bool time_to_go = false;
     bool show_depth_image = false;
-    char demo_mode = DEMO_MODE_LIGHT_SABERS;
+    char demo_mode = DEMO_MODE_JOINT_INFO;
     bool writing = false;
     bool use_point_cloud_image_for_detection = false;
 };

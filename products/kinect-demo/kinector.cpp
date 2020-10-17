@@ -125,7 +125,8 @@ k4a_calibration_t *Kinector::GetCalibration()
     return calibration;
 }
 
-k4a_image_t Kinector::GetXYTable() {
+k4a_image_t Kinector::GetXYTable()
+{
     return xy_table;
 }
 BgraPixel *Kinector::GetPixels()
@@ -158,8 +159,14 @@ k4a_image_t Kinector::GetColorizedDepthImage()
 
 void Kinector::ReleaseFrame()
 {
-    k4abt_frame_release(body_frame);
-    k4a_image_release(colorizedDepthImage);
+    if (is_valid)
+    {
+        if (bodyIds.size() > 0)
+        {
+            k4abt_frame_release(body_frame);
+        }
+        k4a_image_release(colorizedDepthImage);
+    }
 }
 vector<k4abt_body_t> Kinector::GetBodies()
 {
@@ -179,7 +186,7 @@ void Kinector::CreateXYTable(k4a_image_t xy_table)
 
     int camerawidth = calibration->color_camera_calibration.resolution_width;
     int cameraheight = calibration->color_camera_calibration.resolution_height;
-    TRACE("Depth camera size", width , " " , height);
+    TRACE("Depth camera size", width, " ", height);
     TRACE("Color camera size", camerawidth, " ", cameraheight);
     k4a_float2_t p;
     k4a_float3_t ray;
@@ -269,7 +276,6 @@ int Kinector::GeneratePointCloud(
     }
     return filtered_point_count;
 }
-
 
 bool Kinector::ColorizePointCloud(const k4a_image_t depth_image,
                                   const k4a_image_t color_image,

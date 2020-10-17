@@ -16,15 +16,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
 FIND_PACKAGE(k4a REQUIRED)
 FIND_PACKAGE(k4abt REQUIRED)
-# FIND_PACKAGE(Eigen3 REQUIRED NO_MODULE)
-
-#if(NOT TARGET Eigen3::Eigen)
-#    message("Eigen has buggy exported package, but headers are found: ${EIGEN3_INCLUDE_DIRS}. Applying workaround.")
-#    add_library(Eigen INTERFACE IMPORTED GLOBAL)
-#    target_include_directories(Eigen INTERFACE "${EIGEN3_INCLUDE_DIRS}")
-#    add_library(Eigen3::Eigen ALIAS Eigen)
-#endif()
-#find_package(Pangolin QUIET)
 
 # These specific settings tell the loader to search the directory of the
 # executable for shared objects. This is done on Linux to emulate the default
