@@ -70,7 +70,7 @@ The Azure Kinect DK is a camera device with four major hardware components:
 - Microphone Array
 - Motion sensor that includes gyroscope and accelerometer.
 
-In this project, we make use of the  RGB camera, the Depth camera, Azure Kinect DK (Sensor and Body Tracking) SDKs and Azure Cognitive Services to enhance how a person can interact with objects around them in 3-Dimensional space.
+In this project, we make use of the  RGB camera, the Depth camera, the [Sensor and Body Tracking](https://docs.microsoft.com/en-us/azure/Kinect-dk/)  SDKs and Azure Cognitive Services to enhance how a person can interact with objects around them in 3-Dimensional space.
 
 - The `Kinector` class encapsulates all the Kinect SDK operations into a simpler API that captures camera and body data for each frame and transforms it to various shapes e.g. pixel buffer, int buffer, Open CV Image matrix, point cloud to make them easily accessible from other parts of the application.
 - The `Euclid` class provides a simple interface to various geometric operations using joint information e.g. vector transformation between coordinate systems, ray-plane intersections and so on.
