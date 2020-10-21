@@ -2,5 +2,5 @@
 # Licensed under the MIT License.
 
 add_subdirectory(extern)
-add_subdirectory(kinect-demo)
+add_subdirectory(bones)
 

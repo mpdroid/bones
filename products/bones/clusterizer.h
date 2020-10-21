@@ -49,10 +49,10 @@ class Clusterizer
 public:
     Clusterizer(cilantro::VectorSet3f *cilantroPoints, cilantro::VectorSet3f *cilantroColors);
     ~Clusterizer();
-    vector<BoundingCube> Clusterize(cilantro::PointCloud3f* cloud_seg);
+    vector<BoundingCube> clusterize(cilantro::PointCloud3f* cloud_seg);
     cilantro::PointCloud3f cloud;
 private:
-    void write_point_cloud(const char *file_name, cilantro::PointCloud3f pc);
+    void writePointCloud(const char *file_name, cilantro::PointCloud3f pc);
 
 };
 }

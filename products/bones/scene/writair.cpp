@@ -25,24 +25,24 @@ void WriteAirScene::onLoopStart(int frame_number)
 void WriteAirScene::comprehend(Kinector *kinector, int frame_number)
 {
     TRACE("capturing write air");
-    Euclid *euclid = new Euclid(kinector->GetCalibration(),
-                                kinector->GetColorWindowOrigin(),
-                                kinector->GetColorWindowSize(),
-                                kinector->GetColorImageWidth(),
-                                kinector->GetColorImageHeight(),
+    Euclid *euclid = new Euclid(kinector->getCalibration(),
+                                kinector->getColorWindowOrigin(),
+                                kinector->getColorWindowSize(),
+                                kinector->getColorImageWidth(),
+                                kinector->getColorImageHeight(),
                                 &moving_average,
                                 K4ABT_JOINT_COUNT,
-                                kinector->GetBodies(),
+                                kinector->getBodies(),
                                 joints_of_interest);
-    for (int k = 0; k < euclid->get_body_count(); k++)
+    for (int k = 0; k < euclid->getBodyCount(); k++)
     {
 
-        k4a_float3_t left_hand = euclid->joint_to_global(k, K4ABT_JOINT_HAND_LEFT, {0.f, 0.f, 0.f});
-        k4a_float3_t left_hand_act = euclid->get_joint(k, K4ABT_JOINT_HAND_LEFT).position;
-        k4a_float3_t navel = euclid->joint_to_global(k, K4ABT_JOINT_SPINE_NAVEL, {0.f, 0.f, 0.f});
-        k4a_float3_t tip = euclid->joint_to_global(k, K4ABT_JOINT_THUMB_RIGHT, {0.f, 0.f, 0.f});
-        k4a_float3_t hand = euclid->joint_to_global(k, K4ABT_JOINT_HAND_RIGHT, {0.f, 0.f, 0.f});
-        ImVec2 tip_vec = euclid->point_to_window(tip);
+        k4a_float3_t left_hand = euclid->jointToGlobal(k, K4ABT_JOINT_HAND_LEFT, {0.f, 0.f, 0.f});
+        k4a_float3_t left_hand_act = euclid->getJoint(k, K4ABT_JOINT_HAND_LEFT).position;
+        k4a_float3_t navel = euclid->jointToGlobal(k, K4ABT_JOINT_SPINE_NAVEL, {0.f, 0.f, 0.f});
+        k4a_float3_t tip = euclid->jointToGlobal(k, K4ABT_JOINT_THUMB_RIGHT, {0.f, 0.f, 0.f});
+        k4a_float3_t hand = euclid->jointToGlobal(k, K4ABT_JOINT_HAND_RIGHT, {0.f, 0.f, 0.f});
+        ImVec2 tip_vec = euclid->pointToWindow(tip);
 
         Vector3f lh, rh, diff;
         lh << left_hand.v[0], left_hand.v[1], left_hand.v[2];
@@ -101,7 +101,7 @@ void WriteAirScene::comprehend(Kinector *kinector, int frame_number)
             }
         }
     }
-    kinector->ColorizeDepthImage();
+    kinector->colorizeDepthImage();
 }
 
 float getBezierValue(float n1, float n2, float perc)

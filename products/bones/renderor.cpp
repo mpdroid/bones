@@ -1,4 +1,4 @@
-#include "rendor.h"
+#include "renderor.h"
 using namespace kdviewer;
 
 Rendor &Rendor::Instance()
@@ -18,10 +18,10 @@ void Rendor::Initialize(const char *windowTitle,
     INFO("initialized kinect viewer");
     this->runtimeConfig = runtimeConfig;
     glfwSetKeyCallback(m_window, keyStrokeHandler);
-    ComputeDimensions();
+    computeDimensions();
 }
 
-void Rendor::ComputeDimensions()
+void Rendor::computeDimensions()
 {
 
     colorWindowWidth = (this->runtimeConfig->show_depth_image == true) ? GetWidth() / 2 : GetWidth();
@@ -32,17 +32,17 @@ void Rendor::ComputeDimensions()
     colorWindowOrigin = (this->runtimeConfig->show_depth_image == true) ? GetWidth() / 2.f : 0.f;
 }
 
-float Rendor::GetColorWindowOrigin()
+float Rendor::getColorWindowOrigin()
 {
     return colorWindowOrigin;
 }
-ImVec2 Rendor::GetColorWindowSize()
+ImVec2 Rendor::getColorWindowSize()
 {
     return colorWindowSize;
 }
 
 
-void Rendor::ShowTextures(const Texture &colorTexture,
+void Rendor::showTextures(const Texture &colorTexture,
                           const Texture &depthTexture, 
                           Kinector *kinector, 
                           AbstractScene *scene, 
@@ -61,7 +61,7 @@ void Rendor::ShowTextures(const Texture &colorTexture,
 
         ImGui::Image(reinterpret_cast<ImTextureID>(static_cast<intptr_t>(colorTexture.Name())), imageSize);
 
-        scene->annotate(ImGui::GetWindowDrawList(), kinector->GetBodyIds(), GetTitleBarHeight());
+        scene->annotate(ImGui::GetWindowDrawList(), kinector->getBodyIds(), GetTitleBarHeight());
     }
     ImGui::End();
 

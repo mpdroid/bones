@@ -41,7 +41,7 @@ void detect_objects(int frame_number,
     Clusterizer clusterizer(&cilantroPoints, &cilantroColors);
     cilantro::PointCloud3f cloud_seg;
 
-    vector<BoundingCube> pointCubes = clusterizer.Clusterize(&cloud_seg);
+    vector<BoundingCube> pointCubes = clusterizer.clusterize(&cloud_seg);
     for (int c = 0; c < pointCubes.size(); c++)
     {
         BoundingCube *cube = &(pointCubes[c]);
@@ -149,32 +149,32 @@ void detect_objects(int frame_number,
 
 void ThingFinderScene::comprehend(Kinector *kinector, int frame_number)
 {
-    Euclid *euclid = new Euclid(kinector->GetCalibration(),
-                                kinector->GetColorWindowOrigin(),
-                                kinector->GetColorWindowSize(),
-                                kinector->GetColorImageWidth(),
-                                kinector->GetColorImageHeight(),
+    Euclid *euclid = new Euclid(kinector->getCalibration(),
+                                kinector->getColorWindowOrigin(),
+                                kinector->getColorWindowSize(),
+                                kinector->getColorImageWidth(),
+                                kinector->getColorImageHeight(),
                                 &moving_average,
                                 K4ABT_JOINT_COUNT,
-                                kinector->GetBodies(),
+                                kinector->getBodies(),
                                 joints_of_interest);
     cilantro::VectorSet3f cilantroPoints;
     cilantro::VectorSet3f cilantroColors;
     cilantro::PointCloud3f cloud_seg;
 
     vector<ImVec2> directionImVectors;
-    for (int k = 0; k < euclid->get_body_count(); k++)
+    for (int k = 0; k < euclid->getBodyCount(); k++)
     {
 
-        Ray ray = euclid->joints_to_ray(k, K4ABT_JOINT_ELBOW_RIGHT, K4ABT_JOINT_HAND_RIGHT, 120.f);
+        Ray ray = euclid->jointsToRay(k, K4ABT_JOINT_ELBOW_RIGHT, K4ABT_JOINT_HAND_RIGHT, 120.f);
         rays.push_back(ray);
-        ImVec2 pointerBeginObj = euclid->vector_to_window(ray.origin);
+        ImVec2 pointerBeginObj = euclid->vectorToWindow(ray.origin);
         directionImVectors.push_back(pointerBeginObj);
 
         float delta = 200.f;
         k4a_float3_t target = {ray.origin[0] + ray.direction[0] * delta, ray.origin[1] + ray.direction[1] * delta,
                                ray.origin[2] + ray.direction[2] * delta};
-        ImVec2 pointerEndObj = euclid->point_to_window(target);
+        ImVec2 pointerEndObj = euclid->pointToWindow(target);
         if (pointerEndObj.x == 0 && pointerEndObj.y == 0)
         {
             directionImVectors.push_back(pointerBeginObj);
@@ -195,7 +195,7 @@ void ThingFinderScene::comprehend(Kinector *kinector, int frame_number)
 
     if (frame_number % FRAME_INTERVAL == 0)
     {
-        int point_count = kinector->GeneratePointCloud(euclid,
+        int point_count = kinector->generatePointCloud(euclid,
                                                        rays,
                                                        &cilantroPoints,
                                                        &cilantroColors);
@@ -203,12 +203,12 @@ void ThingFinderScene::comprehend(Kinector *kinector, int frame_number)
         {
             std::thread th1(detect_objects,
                             frame_number,
-                            kinector->GetCVImage(),
+                            kinector->getCVImage(),
                             cilantroPoints, cilantroColors,
                             rays, &detections,
-                            kinector->GetCalibration(),
-                            euclid->get_color_image_width(),
-                            euclid->get_color_image_height());
+                            kinector->getCalibration(),
+                            euclid->getColorImageWidth(),
+                            euclid->getColorImageHeight());
             th1.detach();
         }
     }
@@ -227,18 +227,18 @@ void ThingFinderScene::comprehend(Kinector *kinector, int frame_number)
         CubeWidget cubeWidget;
         cubeWidget.frameNumber = detection.frame_number;
         cubeWidget.color = {detection.cube.color[0], detection.cube.color[1], detection.cube.color[2]};
-        cubeWidget.ftl = euclid->vector_to_window(ftl);
-        cubeWidget.ftr = euclid->vector_to_window(ftr);
-        cubeWidget.fbr = euclid->vector_to_window(fbr);
-        cubeWidget.fbl = euclid->vector_to_window(fbl);
-        cubeWidget.btl = euclid->vector_to_window(btl);
-        cubeWidget.btr = euclid->vector_to_window(btr);
-        cubeWidget.bbr = euclid->vector_to_window(bbr);
-        cubeWidget.bbl = euclid->vector_to_window(bbl);
+        cubeWidget.ftl = euclid->vectorToWindow(ftl);
+        cubeWidget.ftr = euclid->vectorToWindow(ftr);
+        cubeWidget.fbr = euclid->vectorToWindow(fbr);
+        cubeWidget.fbl = euclid->vectorToWindow(fbl);
+        cubeWidget.btl = euclid->vectorToWindow(btl);
+        cubeWidget.btr = euclid->vectorToWindow(btr);
+        cubeWidget.bbr = euclid->vectorToWindow(bbr);
+        cubeWidget.bbl = euclid->vectorToWindow(bbl);
         cubeWidget.name = detection.name;
         cubeWidgets.push_back(cubeWidget);
     }
-    kinector->ColorizeFilteredDepthImage(euclid, rays);
+    kinector->colorizeFilteredDepthImage(euclid, rays);
 }
 
 void ThingFinderScene::annotate(ImDrawList *drawList, vector<int> bodies, float y_shift)

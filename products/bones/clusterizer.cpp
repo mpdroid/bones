@@ -17,7 +17,7 @@ Clusterizer::~Clusterizer()
 }
 
 // segments point cloud based on nearness and color similarity between points 
-vector<BoundingCube> Clusterizer::Clusterize(cilantro::PointCloud3f *segmentedCloud)
+vector<BoundingCube> Clusterizer::clusterize(cilantro::PointCloud3f *segmentedCloud)
 {
     TRACE("Entering...");
     vector<BoundingCube> boundingCubes;

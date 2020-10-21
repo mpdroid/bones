@@ -50,17 +50,17 @@ void LightSaberScene::onLoopStart(int frame_number)
 
 void LightSaberScene::comprehend(Kinector *kinector, int frame_number)
 {
-    Euclid *euclid = new Euclid(kinector->GetCalibration(),
-                                kinector->GetColorWindowOrigin(),
-                                kinector->GetColorWindowSize(),
-                                kinector->GetColorImageWidth(),
-                                kinector->GetColorImageHeight(),
+    Euclid *euclid = new Euclid(kinector->getCalibration(),
+                                kinector->getColorWindowOrigin(),
+                                kinector->getColorWindowSize(),
+                                kinector->getColorImageWidth(),
+                                kinector->getColorImageHeight(),
                                 &moving_average,
                                 K4ABT_JOINT_COUNT,
-                                kinector->GetBodies(),
+                                kinector->getBodies(),
                                 joints_of_interest);
     vector<PointerWidget> newSabers;
-    for (int k = 0; k < euclid->get_body_count(); k++)
+    for (int k = 0; k < euclid->getBodyCount(); k++)
     {
         int lastSaberIndex = -1;
         for (int l = lightSabers.size() - 1; l >= 0; l--)
@@ -72,12 +72,12 @@ void LightSaberScene::comprehend(Kinector *kinector, int frame_number)
             }
         }
 
-        Ray ray = euclid->joints_to_ray(k, K4ABT_JOINT_ELBOW_RIGHT, K4ABT_JOINT_HAND_RIGHT, K4ABT_JOINT_HAND_RIGHT);
+        Ray ray = euclid->jointsToRay(k, K4ABT_JOINT_ELBOW_RIGHT, K4ABT_JOINT_HAND_RIGHT, K4ABT_JOINT_HAND_RIGHT);
 
-        Vector3f ortho = euclid->ray_to_joint_ortho(ray, k, K4ABT_JOINT_THUMB_RIGHT);
+        Vector3f ortho = euclid->rayToJointOrtho(ray, k, K4ABT_JOINT_THUMB_RIGHT);
         // rays.push_back(ray);
         // ImVec2 pointerBeginObj = euclid->vector_to_window(ray.origin);
-        ImVec2 pointerBeginObj = euclid->joint_to_window(k, K4ABT_JOINT_HAND_RIGHT);
+        ImVec2 pointerBeginObj = euclid->jointToWindow(k, K4ABT_JOINT_HAND_RIGHT);
 
         PointerWidget lightSaber;
         // lightSaber.boxType = 4;
@@ -87,7 +87,7 @@ void LightSaberScene::comprehend(Kinector *kinector, int frame_number)
 
         lightSaber.arrow.push_back(pointerBeginObj);
 
-        ImVec2 pointerEndObj = euclid->vector_to_window(ray.origin + ortho * 800.f);
+        ImVec2 pointerEndObj = euclid->vectorToWindow(ray.origin + ortho * 800.f);
         lightSaber.arrow.push_back(pointerEndObj);
 
         if (lastSaberIndex > -1)
@@ -123,7 +123,7 @@ void LightSaberScene::comprehend(Kinector *kinector, int frame_number)
         }
     }
     lightSabers.insert(lightSabers.end(), newSabers.begin(), newSabers.end());
-    kinector->ColorizeDepthImage();
+    kinector->colorizeDepthImage();
     return;
 }
 
@@ -181,6 +181,7 @@ void LightSaberScene::onLoopEnd()
 JointInfoScene::JointInfoScene()
 {
     all_joints = {
+        K4ABT_JOINT_EYE_LEFT,
         K4ABT_JOINT_PELVIS,
         K4ABT_JOINT_SPINE_CHEST,
         K4ABT_JOINT_SHOULDER_LEFT,
@@ -200,6 +201,11 @@ JointInfoScene::JointInfoScene()
         K4ABT_JOINT_ANKLE_RIGHT,
         K4ABT_JOINT_FOOT_RIGHT,
         K4ABT_JOINT_HEAD};
+    orientation_joints = {
+        K4ABT_JOINT_EYE_LEFT,
+        K4ABT_JOINT_SPINE_CHEST,
+        K4ABT_JOINT_HANDTIP_LEFT,
+        K4ABT_JOINT_HANDTIP_RIGHT};
     joints_of_interest = {
         K4ABT_JOINT_SPINE_CHEST,
         K4ABT_JOINT_HANDTIP_LEFT,
@@ -218,20 +224,20 @@ void JointInfoScene::onLoopStart(int frame_number)
 
 void JointInfoScene::comprehend(Kinector *kinector, int frame_number)
 {
-    int num_bodies = kinector->GetBodyIds().size();
+    int num_bodies = kinector->getBodyIds().size();
     if (moving_average.size() < (int)num_bodies)
     {
         moving_average.resize((int)num_bodies);
     }
-    Euclid *euclid = new Euclid(kinector->GetCalibration(),
-                                kinector->GetColorWindowOrigin(),
-                                kinector->GetColorWindowSize(),
-                                kinector->GetColorImageWidth(),
-                                kinector->GetColorImageHeight(),
+    Euclid *euclid = new Euclid(kinector->getCalibration(),
+                                kinector->getColorWindowOrigin(),
+                                kinector->getColorWindowSize(),
+                                kinector->getColorImageWidth(),
+                                kinector->getColorImageHeight(),
                                 &moving_average,
                                 K4ABT_JOINT_COUNT,
-                                kinector->GetBodies(),
-                                joints_of_interest);
+                                kinector->getBodies(),
+                                all_joints);
 
     AxisWidget axisItem;
     axisItem.name = "Depth Camera";
@@ -239,30 +245,30 @@ void JointInfoScene::comprehend(Kinector *kinector, int frame_number)
     axisItem.boxType = 5;
     axisItem.frameNumber = frame_number;
     axisItem.textCoordinates = ImVec2(100.f, 75.f);
-    k4a_float3_t origin = euclid->window_to_point(ImVec2(100.f, 100.f));
+    k4a_float3_t origin = euclid->windowToPoint(ImVec2(100.f, 100.f));
     Eigen::Vector3f depth_zero, depth_x, depth_y, depth_z;
     depth_zero << origin.v[0], origin.v[1], origin.v[2];
     depth_x << origin.v[0] + 3.f, origin.v[1], origin.v[2];
     depth_y << origin.v[0], origin.v[1] + 3.f, origin.v[2];
     depth_z << origin.v[0], origin.v[1], origin.v[2] + 3.f;
-    ImVec2 pointerBeginObj = euclid->vector_to_window(depth_zero);
+    ImVec2 pointerBeginObj = euclid->vectorToWindow(depth_zero);
     axisItem.x.push_back(pointerBeginObj);
-    axisItem.x.push_back(euclid->vector_to_window(depth_x));
+    axisItem.x.push_back(euclid->vectorToWindow(depth_x));
     axisItem.y.push_back(pointerBeginObj);
-    axisItem.y.push_back(euclid->vector_to_window(depth_y));
+    axisItem.y.push_back(euclid->vectorToWindow(depth_y));
     axisItem.z.push_back(pointerBeginObj);
-    axisItem.z.push_back(euclid->vector_to_window(depth_z));
+    axisItem.z.push_back(euclid->vectorToWindow(depth_z));
     axisItem.color = {0, 0, 0};
     axisItem.textShadowColor = {255, 255, 255};
     axisWidgets.push_back(axisItem);
 
-    for (int k = 0; k < euclid->get_body_count(); k++)
+    for (int k = 0; k < euclid->getBodyCount(); k++)
     {
 
         for (k4abt_joint_id_t joint_id : all_joints)
         {
             int valid = 0;
-            JointInfo jointInfo = euclid->get_joint_information(k, static_cast<k4abt_joint_id_t>(joint_id), &valid);
+            JointInfo jointInfo = euclid->getJointInformation(k, static_cast<k4abt_joint_id_t>(joint_id), &valid);
             if (valid == 1)
             {
                 JointWidget jointDisplay;
@@ -273,12 +279,17 @@ void JointInfoScene::comprehend(Kinector *kinector, int frame_number)
             }
         }
     }
-    kinector->ColorizeDepthImage();
+    kinector->colorizeDepthImage();
 }
 
-bool JointInfoScene::IsJointOfInterest(k4abt_joint_id_t joint_id)
+bool JointInfoScene::isJointOfInterest(k4abt_joint_id_t joint_id)
 {
     return count(joints_of_interest.begin(), joints_of_interest.end(), joint_id) > 0;
+}
+
+bool JointInfoScene::isOrientationJoint(k4abt_joint_id_t joint_id)
+{
+    return count(orientation_joints.begin(), orientation_joints.end(), joint_id) > 0;
 }
 
 void JointInfoScene::annotate(ImDrawList *drawList, vector<int> bodies, float y_shift)
@@ -293,7 +304,11 @@ void JointInfoScene::annotate(ImDrawList *drawList, vector<int> bodies, float y_
         float fontSize = 25.f;
         //float shadowFontSize = 25.05f;
         // drawList->AddText(NULL, shadowFontSize, shadowTextStart, shadowColor, axis.name.c_str());
-        drawList->AddText(NULL, fontSize, textStart, color, axis.name.c_str());
+        ImVec2 rectStart(axis.textCoordinates.x - 40.f, axis.textCoordinates.y - 2.f);
+        ImVec2 rectEnd(axis.x[1].x + 40.f, axis.y[1].y + 60.f);
+
+        drawList->AddRectFilled(rectStart, rectEnd, IM_COL32(255, 255, 255, 200), 10.f);
+        drawList->AddText(NULL, fontSize, textStart, IM_COL32(0, 0, 0, 255), axis.name.c_str());
         ImVec2 start = axis.x[0];
         start.y += y_shift;
         ImVec2 end = axis.x[1];
@@ -331,33 +346,24 @@ void JointInfoScene::annotate(ImDrawList *drawList, vector<int> bodies, float y_
             auto shadowColor = IM_COL32(0, 255, 0, 255);
             float fontSize = 15.f;
             float shadowFontSize = 15.02f;
-            if (IsJointOfInterest(joint.jointId) == false)
-            {
-                ImVec2 jointPoint(joint.textCoordinates.x + 5.f, joint.textCoordinates.y + 2.f);
-                jointPoint.y += y_shift;
-                drawList->AddCircleFilled(jointPoint, 6.f, IM_COL32(  130, 224, 170 , 255), 20);
-                drawList->AddCircle(jointPoint, 10.f, IM_COL32(  130, 224, 170 , 255), 20, 2.f);
-            }
-            else
+            if (isJointOfInterest(joint.jointId) == true)
             {
 
-
-                ImVec2 rectStart(joint.textCoordinates.x - 5.f, joint.textCoordinates.y- 2.f);
+                ImVec2 rectStart(joint.textCoordinates.x - 170.f, joint.textCoordinates.y - 2.f);
                 rectStart.y += y_shift;
-                ImVec2 rectEnd(joint.textCoordinates.x + 325.f, joint.textCoordinates.y + 36.f);
+                ImVec2 rectEnd(joint.textCoordinates.x + 170.f, joint.textCoordinates.y + 36.f);
                 rectEnd.y += y_shift;
                 drawList->AddRectFilled(rectStart, rectEnd, IM_COL32(255, 255, 255, 255));
 
-                ImVec2 textStart(joint.textCoordinates.x + 5.f, joint.textCoordinates.y + 2.f);
+                ImVec2 textStart(joint.textCoordinates.x - 160.f, joint.textCoordinates.y + 2.f);
                 textStart.y += y_shift;
-                ImVec2 shadowTextStart(joint.textCoordinates.x + 3.f, joint.textCoordinates.y + 0.f);
 
                 ostringstream depthStream, orientStream;
                 depthStream << "Depth: " << (int)joint.depthCoordinates[0] << ", " << (int)joint.depthCoordinates[1] << ", " << (int)joint.depthCoordinates[2];
                 string depth_string = depthStream.str();
                 drawList->AddText(NULL, fontSize, textStart, IM_COL32(0, 0, 0, 255), depth_string.c_str());
 
-                ImVec2 textStartOrientation(joint.textCoordinates.x + 5.f, joint.textCoordinates.y + 18.f);
+                ImVec2 textStartOrientation(joint.textCoordinates.x - 160.f, joint.textCoordinates.y + 18.f);
                 textStartOrientation.y += y_shift;
                 orientStream.precision(2);
                 orientStream << "Orientation: " << joint.orientation[0]
@@ -366,7 +372,9 @@ void JointInfoScene::annotate(ImDrawList *drawList, vector<int> bodies, float y_
                              << ", " << joint.orientation[3];
                 string orientString = orientStream.str();
                 drawList->AddText(NULL, fontSize, textStartOrientation, IM_COL32(0, 0, 0, 255), orientString.c_str());
-
+            }
+            if (isOrientationJoint(joint.jointId) == true)
+            {
                 ImVec2 start = joint.x_direction[0];
                 start.y += y_shift;
                 ImVec2 end = joint.x_direction[1];
@@ -384,6 +392,13 @@ void JointInfoScene::annotate(ImDrawList *drawList, vector<int> bodies, float y_
                 ImVec2 endz = joint.z_direction[1];
                 endz.y += y_shift;
                 drawList->AddLine(startz, endz, IM_COL32(0, 0, 255, 255), 4.0f);
+            }
+            if (isJointOfInterest(joint.jointId) == false)
+            {
+                ImVec2 jointPoint(joint.textCoordinates.x + 5.f, joint.textCoordinates.y + 2.f);
+                jointPoint.y += y_shift;
+                drawList->AddCircleFilled(jointPoint, 6.f, IM_COL32(130, 224, 170, 255), 20);
+                drawList->AddCircle(jointPoint, 10.f, IM_COL32(130, 224, 170, 255), 20, 2.f);
             }
         }
     }

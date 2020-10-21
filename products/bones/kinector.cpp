@@ -33,7 +33,7 @@ Kinector::Kinector(
                      calibration->depth_camera_calibration.resolution_width * (int)sizeof(k4a_float2_t),
                      &xy_table);
 
-    CreateXYTable(xy_table);
+    createXYTable(xy_table);
 
     k4a_image_create(K4A_IMAGE_FORMAT_CUSTOM,
                      calibration->depth_camera_calibration.resolution_width,
@@ -52,7 +52,7 @@ bool compareBodies(k4abt_body_t first, k4abt_body_t second)
     return (h1 < h2);
 }
 
-void Kinector::InitializeFrame(k4a::capture capture)
+void Kinector::initializeFrame(k4a::capture capture)
 {
     is_valid = false;
     bodies.clear();
@@ -71,7 +71,7 @@ void Kinector::InitializeFrame(k4a::capture capture)
         colorImageWidth,
         CV_8UC4, (void *)bufcpy, cv::Mat::AUTO_STEP);
     pixels = reinterpret_cast<BgraPixel *>(colorImageBuffer);
-    ColorizePointCloud(
+    colorizePointCloud(
         depthImage.handle(),
         colorImage.handle(),
         &colorizedDepthImage);
@@ -121,76 +121,76 @@ bool Kinector::isValid()
     return is_valid;
 }
 
-k4a_calibration_t *Kinector::GetCalibration()
+k4a_calibration_t *Kinector::getCalibration()
 {
     return calibration;
 }
 
-k4a_image_t Kinector::GetXYTable()
+k4a_image_t Kinector::getXYTable()
 {
     return xy_table;
 }
-BgraPixel *Kinector::GetPixels()
+BgraPixel *Kinector::getColorPixels()
 {
     return pixels;
 }
 
-BgraPixel *Kinector::GetDepthPixels()
+BgraPixel *Kinector::getDepthPixels()
 {
     return &(depthPixelBuffer[0]);
 }
-int Kinector::GetColorImageHeight()
+int Kinector::getColorImageHeight()
 {
     return colorImageHeight;
 }
 
-int Kinector::GetColorImageWidth()
+int Kinector::getColorImageWidth()
 {
     return colorImageWidth;
 }
 
-k4a::image Kinector::GetDepthImage()
+k4a::image Kinector::getDepthImage()
 {
     return depthImage;
 }
 
-int Kinector::GetDepthImageHeight()
+int Kinector::getDepthImageHeight()
 {
     return GetDepthDimensions(kinect_config->depth_mode).second;
 }
 
-int Kinector::GetDepthImageWidth()
+int Kinector::getDepthImageWidth()
 {
     return GetDepthDimensions(kinect_config->depth_mode).first;
 }
 
-cv::Mat Kinector::GetCVImage()
+cv::Mat Kinector::getCVImage()
 {
     return cvImage;
 }
-k4a_image_t Kinector::GetColorizedDepthImage()
+k4a_image_t Kinector::getColorizedDepthImage()
 {
     return colorizedDepthImage;
 }
 
-float Kinector::GetColorWindowOrigin()
+float Kinector::getColorWindowOrigin()
 {
     return colorWindowOrigin;
 }
-void Kinector::SetColorWindowOrigin(float origin)
+void Kinector::setColorWindowOrigin(float origin)
 {
     this->colorWindowOrigin = origin;
 }
-ImVec2 Kinector::GetColorWindowSize()
+ImVec2 Kinector::getColorWindowSize()
 {
     return colorWindowSize;
 }
-void Kinector::SetColorWindowSize(ImVec2 size)
+void Kinector::setColorWindowSize(ImVec2 size)
 {
     this->colorWindowSize = size;
 }
 
-void Kinector::ReleaseFrame()
+void Kinector::releaseFrame()
 {
     if (is_valid)
     {
@@ -201,16 +201,16 @@ void Kinector::ReleaseFrame()
         k4a_image_release(colorizedDepthImage);
     }
 }
-vector<k4abt_body_t> Kinector::GetBodies()
+vector<k4abt_body_t> Kinector::getBodies()
 {
     return bodies;
 }
-vector<int> Kinector::GetBodyIds()
+vector<int> Kinector::getBodyIds()
 {
     return bodyIds;
 }
 
-void Kinector::CreateXYTable(k4a_image_t xy_table)
+void Kinector::createXYTable(k4a_image_t xy_table)
 {
     k4a_float2_t *table_data = (k4a_float2_t *)(void *)k4a_image_get_buffer(xy_table);
 
@@ -249,7 +249,7 @@ void Kinector::CreateXYTable(k4a_image_t xy_table)
     }
 }
 
-int Kinector::GeneratePointCloud(
+int Kinector::generatePointCloud(
     Euclid *euclid,
     vector<Ray> rays,
     cilantro::VectorSet3f *cilantroPoints,
@@ -280,7 +280,7 @@ int Kinector::GeneratePointCloud(
             float y = (xy_table_data[i].xy.y * (float)depth_data[i]);
             float z = (float)depth_data[i];
             k4a_float3_t point = {x, y, z};
-            if (!euclid->is_point_in_forward_space(point, rays))
+            if (!euclid->isPointInFieldOfView(point, rays))
             {
                 continue;
             }
@@ -310,7 +310,7 @@ int Kinector::GeneratePointCloud(
     return filtered_point_count;
 }
 
-bool Kinector::ColorizePointCloud(const k4a_image_t depth_image,
+bool Kinector::colorizePointCloud(const k4a_image_t depth_image,
                                   const k4a_image_t color_image,
                                   k4a_image_t *transformed_color_image)
 {
@@ -341,7 +341,7 @@ bool Kinector::ColorizePointCloud(const k4a_image_t depth_image,
 // expectedValueRange to define what min/max values the depth image should have.
 // Low values are blue, high values are red.
 //
-void Kinector::ColorizeDepthImage()
+void Kinector::colorizeDepthImage()
 {
     std::pair<uint16_t, uint16_t> expectedValueRange = GetDepthModeRange(kinect_config->depth_mode);
     const k4a_image_format_t imageFormat = depthImage.get_format();
@@ -370,7 +370,7 @@ void Kinector::ColorizeDepthImage()
 }
 
 
-void Kinector::ColorizeFilteredDepthImage(
+void Kinector::colorizeFilteredDepthImage(
                                                   Euclid *euclid,
                                                   vector<Ray> rays)
 {
@@ -407,7 +407,7 @@ void Kinector::ColorizeFilteredDepthImage(
                 float y = (xy_table_data[i].xy.y * (float)depthData[i]);
                 float z = (float)depthData[i];
                 k4a_float3_t point = {x, y, z};
-                if (euclid->is_point_in_forward_space(point, rays))
+                if (euclid->isPointInFieldOfView(point, rays))
                 {
                     if (i >= len)
                     {

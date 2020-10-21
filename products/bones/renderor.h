@@ -37,16 +37,14 @@ namespace kdviewer
                         GLFWkeyfun keyHandler,
                         RunTimeConfig *runtimeConfig,
                         k4a_device_configuration_t kinect_config);
-        void ShowDepthTexture(const Texture &texture);
-        void ShowColorTexture(const Texture &texture);
-        void ShowTextures(const Texture &colorTexture,
+        void showTextures(const Texture &colorTexture,
                           const Texture &depthTexture,
                           Kinector *kinector,
                           AbstractScene *scene,
                           bool showDepthImage);
-        void ComputeDimensions();
-        float GetColorWindowOrigin();
-        ImVec2 GetColorWindowSize();
+        void computeDimensions();
+        float getColorWindowOrigin();
+        ImVec2 getColorWindowSize();
 
     protected:
         Rendor() = default;

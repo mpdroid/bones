@@ -327,7 +327,7 @@ Euclid::~Euclid()
     this->world_to_joint.clear();
 }
 
-int Euclid::get_body_count()
+int Euclid::getBodyCount()
 {
     return this->bodies.size();
 }
@@ -343,7 +343,7 @@ void Euclid::update_moving_average(JointCoordinates *moving_average, k4abt_joint
     moving_average->orientation.v[3] = moving_average->orientation.v[3] * (1.f - MULTIPLIER) + joint.orientation.v[3] * MULTIPLIER;
 }
 
-k4a_float3_t Euclid::joint_to_global(uint32_t body_id, k4abt_joint_id_t joint_id, k4a_float3_t target)
+k4a_float3_t Euclid::jointToGlobal(uint32_t body_id, k4abt_joint_id_t joint_id, k4a_float3_t target)
 {
     int body_num = body_id_map[body_id];
     int joint_num = joint_id_map[joint_id];
@@ -356,7 +356,7 @@ k4a_float3_t Euclid::joint_to_global(uint32_t body_id, k4abt_joint_id_t joint_id
     return k4a_transformed;
 }
 
-ImVec2 Euclid::joint_target_to_window(uint32_t body_id, k4abt_joint_id_t joint_id, k4a_float3_t target)
+ImVec2 Euclid::jointTargetToWindow(uint32_t body_id, k4abt_joint_id_t joint_id, k4a_float3_t target)
 {
     int valid = 0;
     int x = (int)window_origin, y = 0;
@@ -367,7 +367,7 @@ ImVec2 Euclid::joint_target_to_window(uint32_t body_id, k4abt_joint_id_t joint_i
     while (k > 0.00001f)
     {
         k4a_float3_t t = {v[0], v[1], v[2]};
-        k4a_float3_t transformed = joint_to_global(body_id, joint_id, t);
+        k4a_float3_t transformed = jointToGlobal(body_id, joint_id, t);
         k4a_float2_t k4a_point_2d;
         k4a_calibration_3d_to_2d(this->sensor_calibration,
                                  &transformed,
@@ -386,7 +386,7 @@ ImVec2 Euclid::joint_target_to_window(uint32_t body_id, k4abt_joint_id_t joint_i
     return ImVec2(x, y);
 }
 
-k4a_float2_t Euclid::point_to_color(k4a_float3_t point, int *valid)
+k4a_float2_t Euclid::pointToColor(k4a_float3_t point, int *valid)
 {
     k4a_float2_t pt2d;
     k4a_calibration_3d_to_2d(sensor_calibration,
@@ -398,7 +398,7 @@ k4a_float2_t Euclid::point_to_color(k4a_float3_t point, int *valid)
     return pt2d;
 }
 
-ImVec2 Euclid::joint_to_window(uint32_t body_id, k4abt_joint_id_t joint_id)
+ImVec2 Euclid::jointToWindow(uint32_t body_id, k4abt_joint_id_t joint_id)
 {
     int body_num = body_id_map[body_id];
     k4abt_body_t body = bodies[body_num];
@@ -444,48 +444,48 @@ ImVec2 Euclid::fittedVector(int x, int y)
     return ImVec2(x1, y1);
 }
 
-k4abt_joint_t Euclid::get_joint(uint32_t body_id, k4abt_joint_id_t joint_id)
+k4abt_joint_t Euclid::getJoint(uint32_t body_id, k4abt_joint_id_t joint_id)
 {
     int body_num = this->body_id_map[body_id];
     k4abt_body_t body = this->bodies[body_num];
     return body.skeleton.joints[joint_id];
 }
 
-JointInfo Euclid::get_joint_information(uint32_t body_id, k4abt_joint_id_t joint_id, int *valid)
+JointInfo Euclid::getJointInformation(uint32_t body_id, k4abt_joint_id_t joint_id, int *valid)
 {
     JointInfo jointInfo;
     int body_num = this->body_id_map[body_id];
     k4abt_body_t body = this->bodies[body_num];
     k4abt_joint_t joint = body.skeleton.joints[joint_id];
-    k4a_float2_t pt2d = point_to_color(joint.position, valid);
+    k4a_float2_t pt2d = pointToColor(joint.position, valid);
     if (*valid == 1)
     {
         jointInfo.jointId = joint_id;
         jointInfo.depthCoordinates = {joint.position.v[0], joint.position.v[1], joint.position.v[2]};
         jointInfo.orientation = {joint.orientation.v[0], joint.orientation.v[1], joint.orientation.v[2], joint.orientation.v[3]};
         jointInfo.imageCoordinates = {pt2d.v[0], pt2d.v[0]};
-        ImVec2 origin = point_to_window(joint.position);
+        ImVec2 origin = pointToWindow(joint.position);
         jointInfo.x_direction.push_back(origin);
-        jointInfo.x_direction.push_back(joint_target_to_window(body_id, joint_id, {100.f, 0.f, 0.f}));
+        jointInfo.x_direction.push_back(jointTargetToWindow(body_id, joint_id, {100.f, 0.f, 0.f}));
         jointInfo.y_direction.push_back(origin);
-        jointInfo.y_direction.push_back(joint_target_to_window(body_id, joint_id, {0.f, 100.f, 0.f}));
+        jointInfo.y_direction.push_back(jointTargetToWindow(body_id, joint_id, {0.f, 100.f, 0.f}));
         jointInfo.z_direction.push_back(origin);
-        jointInfo.z_direction.push_back(joint_target_to_window(body_id, joint_id, {0.f, 0.f, 100.f}));
+        jointInfo.z_direction.push_back(jointTargetToWindow(body_id, joint_id, {0.f, 0.f, 100.f}));
         jointInfo.textCoordinates = origin;
     }
     return jointInfo;
 }
 
-bool Euclid::is_thumb_pointing_upwards(uint32_t body_id)
+bool Euclid::isThumbPointingUpwards(uint32_t body_id)
 {
 
-    k4abt_joint_t thumb = this->get_joint(body_id, K4ABT_JOINT_THUMB_RIGHT);
-    k4abt_joint_t hand = this->get_joint(body_id, K4ABT_JOINT_HANDTIP_RIGHT);
+    k4abt_joint_t thumb = this->getJoint(body_id, K4ABT_JOINT_THUMB_RIGHT);
+    k4abt_joint_t hand = this->getJoint(body_id, K4ABT_JOINT_HANDTIP_RIGHT);
 
     return thumb.position.v[1] - hand.position.v[1] < 0.f;
 }
 
-k4a_float2_t Euclid::window_to_point2d(ImVec2 window_point)
+k4a_float2_t Euclid::windowToPoint2d(ImVec2 window_point)
 {
     float x = (window_point.x - this->window_origin) * (float)this->color_image_width / this->actual_image_size.x;
     float y = (window_point.y) * (float)this->color_image_height / this->actual_image_size.y;
@@ -494,9 +494,9 @@ k4a_float2_t Euclid::window_to_point2d(ImVec2 window_point)
     return pt2d;
 }
 
-k4a_float3_t Euclid::window_to_point(ImVec2 window_point)
+k4a_float3_t Euclid::windowToPoint(ImVec2 window_point)
 {
-    k4a_float2_t pt2d = this->window_to_point2d(window_point);
+    k4a_float2_t pt2d = this->windowToPoint2d(window_point);
     k4a_float3_t pt3d;
     int valid = 0;
     k4a_calibration_2d_to_3d(
@@ -504,7 +504,7 @@ k4a_float3_t Euclid::window_to_point(ImVec2 window_point)
     return pt3d;
 }
 
-ImVec2 Euclid::point_to_window(k4a_float3_t target)
+ImVec2 Euclid::pointToWindow(k4a_float3_t target)
 {
 
     k4a_float2_t k4a_point_2d;
@@ -526,7 +526,7 @@ ImVec2 Euclid::point_to_window(k4a_float3_t target)
     return fittedVector(x, y);
 }
 
-ImVec2 Euclid::vector2f_to_window(Eigen::Vector2f point)
+ImVec2 Euclid::vector2fToWindow(Eigen::Vector2f point)
 {
     int x = point[0], y = point[1];
     x = x + (int)((point[0] / (float)this->color_image_width) * actual_image_size.x);
@@ -534,7 +534,7 @@ ImVec2 Euclid::vector2f_to_window(Eigen::Vector2f point)
     return fittedVector(x, y);
 }
 
-ImVec2 Euclid::vector_to_window(Eigen::Vector3f point)
+ImVec2 Euclid::vectorToWindow(Eigen::Vector3f point)
 {
 
     k4a_float3_t target = {point[0], point[1], point[2]};
@@ -557,7 +557,7 @@ ImVec2 Euclid::vector_to_window(Eigen::Vector3f point)
     return fittedVector(x, y);
 }
 
-Ray Euclid::joint_to_ray(uint32_t body_id, k4abt_joint_id_t joint_id, k4a_float3_t target)
+Ray Euclid::jointToRay(uint32_t body_id, k4abt_joint_id_t joint_id, k4a_float3_t target)
 {
     int body_num = this->body_id_map[body_id];
     int joint_num = this->joint_id_map[joint_id];
@@ -575,7 +575,7 @@ Ray Euclid::joint_to_ray(uint32_t body_id, k4abt_joint_id_t joint_id, k4a_float3
     return ray;
 }
 
-Ray Euclid::joints_to_ray(uint32_t body_id, k4abt_joint_id_t from_joint_id, k4abt_joint_id_t to_joint_id, float delta)
+Ray Euclid::jointsToRay(uint32_t body_id, k4abt_joint_id_t from_joint_id, k4abt_joint_id_t to_joint_id, float delta)
 {
     int body_num = this->body_id_map[body_id];
     int from_joint_num = this->joint_id_map[from_joint_id];
@@ -593,7 +593,7 @@ Ray Euclid::joints_to_ray(uint32_t body_id, k4abt_joint_id_t from_joint_id, k4ab
     return ray;
 }
 
-Ray Euclid::joints_to_ray(uint32_t body_id, k4abt_joint_id_t from_joint_id, k4abt_joint_id_t to_joint_id, k4abt_joint_id_t tip_joint_id)
+Ray Euclid::jointsToRay(uint32_t body_id, k4abt_joint_id_t from_joint_id, k4abt_joint_id_t to_joint_id, k4abt_joint_id_t tip_joint_id)
 {
     int body_num = this->body_id_map[body_id];
     int from_joint_num = this->joint_id_map[from_joint_id];
@@ -614,7 +614,7 @@ Ray Euclid::joints_to_ray(uint32_t body_id, k4abt_joint_id_t from_joint_id, k4ab
     return ray;
 }
 
-Eigen::Vector3f Euclid::ray_to_joint_ortho(Ray ray, uint32_t body_id, k4abt_joint_id_t joint_id)
+Eigen::Vector3f Euclid::rayToJointOrtho(Ray ray, uint32_t body_id, k4abt_joint_id_t joint_id)
 {
     int body_num = this->body_id_map[body_id];
     k4abt_body_t body = this->bodies[body_num];
@@ -628,12 +628,7 @@ Eigen::Vector3f Euclid::ray_to_joint_ortho(Ray ray, uint32_t body_id, k4abt_join
     return ortho;
 }
 
-int Euclid::model_count()
-{
-    return joint_to_world.size();
-}
-
-bool Euclid::is_point_in_forward_space(k4a_float3_t point, vector<Ray> rays)
+bool Euclid::isPointInFieldOfView(k4a_float3_t point, vector<Ray> rays)
 {
 
     for (Ray ray : rays)
@@ -650,71 +645,15 @@ bool Euclid::is_point_in_forward_space(k4a_float3_t point, vector<Ray> rays)
     return false;
 }
 
-bool Euclid::is_point_in_forward_space(k4a_float3_t point)
-{
-    k4abt_joint_id_t from_joint_id = K4ABT_JOINT_ELBOW_RIGHT;
-    k4abt_joint_id_t to_joint_id = K4ABT_JOINT_HAND_RIGHT;
-    for (int body_num = 0; body_num < bodies.size(); body_num++)
-    {
-        int from_joint_num = this->joint_id_map[from_joint_id];
-        int to_joint_num = this->joint_id_map[to_joint_id];
-        k4abt_body_t body = this->bodies[body_num];
-        k4abt_joint_t from_joint = body.skeleton.joints[from_joint_id];
-        k4abt_joint_t to_joint = body.skeleton.joints[to_joint_id];
-        k4a_float3_t from_position = from_joint.position;
-        k4a_float3_t to_position = to_joint.position;
-        Ray ray;
-        ray.direction << to_position.v[0] - from_position.v[0], to_position.v[1] - from_position.v[1], to_position.v[2] - from_position.v[2];
-        ray.direction = ray.direction / ray.direction.norm();
-        ray.origin << from_position.v[0], from_position.v[1], from_position.v[2];
-        Eigen::Vector3f point_direction;
-        point_direction << point.v[0] - to_position.v[0], point.v[1] - to_position.v[1], point.v[2] - to_position.v[2];
-        float dotp = ray.direction.dot(point_direction);
-        float denom = point_direction.norm();
-        float dotp_normalized = dotp / denom;
-        float angle = acos(dotp_normalized);
-        if (dotp > 0.0001f && angle <= M_PI / 4.f)
-            return true;
-    }
-    return false;
-}
-
-bool Euclid::is_point_in_forward_space(k4a_float3_t point, k4abt_joint_id_t joint_id, bool is_x_positive)
-{
-    int joint_num = this->joint_id_map[joint_id];
-
-    float eps = (is_x_positive == true) ? epsilon : -epsilon;
-    for (vector<TransformationMatrix> models : this->world_to_joint)
-    {
-        vec4 pointPrime;
-        vec4 pointVector = {
-            point.v[0],
-            point.v[1],
-            point.v[2],
-            1.0f};
-        mat4x4_mul_vec4(pointPrime, models[joint_num].model, pointVector);
-
-        if (is_x_positive == true && pointPrime[0] > epsilon)
-        {
-            return true;
-        }
-        if (is_x_positive == false && pointPrime[0] < -epsilon)
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-k4a_calibration_t *Euclid::get_sensor_calibration()
+k4a_calibration_t *Euclid::getSensorCalibration()
 {
         return this->sensor_calibration;
 }
-int Euclid::get_color_image_width()
+int Euclid::getColorImageWidth()
 {
     return this->color_image_width;
 }
-int Euclid::get_color_image_height()
+int Euclid::getColorImageHeight()
 {
     return this->color_image_height;
 }

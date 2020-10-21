@@ -18,12 +18,12 @@ include_directories(
     ${OpenCV_INCLUDE_DIRS}
 )
 
-add_executable(kinector
+add_executable(bones
     main.cpp
     texture.cpp
     clusterizer.cpp
     viewerwindow.cpp
-    rendor.cpp
+    renderor.cpp
     azure_vision_request.cpp
     euclid.cpp
     controller.cpp
@@ -33,7 +33,7 @@ add_executable(kinector
     scene/thingfinder.cpp)
 
 
-target_link_libraries(kinector PRIVATE
+target_link_libraries(bones PRIVATE
     k4a::k4a
     k4abt::k4abt
     glfw::glfw

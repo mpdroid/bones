@@ -19,7 +19,7 @@ using namespace std;
 #include "k4apixel.h"
 #include "k4astaticimageproperties.h"
 #include "texture.h"
-#include "rendor.h"
+#include "renderor.h"
 using namespace kdviewer;
 #include "azure_vision_request.h"
 

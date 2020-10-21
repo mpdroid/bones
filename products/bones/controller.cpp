@@ -102,16 +102,16 @@ int Controller::runLoop()
             this->scene->onLoopStart(frame_number);
             // std::vector<BgraPixel> depthTextureBuffer;
 
-            window.ComputeDimensions();
-            kinector.SetColorWindowOrigin(window.GetColorWindowOrigin());
-            kinector.SetColorWindowSize(window.GetColorWindowSize());
+            window.computeDimensions();
+            kinector.setColorWindowOrigin(window.getColorWindowOrigin());
+            kinector.setColorWindowSize(window.getColorWindowSize());
 
             k4a::capture capture;
             vector<k4abt_body_t> bodies;
             uint32_t num_bodies = 0;
             if (dev.get_capture(&capture, std::chrono::milliseconds(0)))
             {
-                kinector.InitializeFrame(capture);
+                kinector.initializeFrame(capture);
                 if (kinector.isValid() == false)
                 {
                     ERROR("Failed to initialize kinect in frame");
@@ -120,11 +120,11 @@ int Controller::runLoop()
 
                 this->scene->comprehend(&kinector, frame_number);
             }
-            colorTexture.Update(kinector.GetPixels());
-            depthTexture.Update(kinector.GetDepthPixels());
-            window.ShowTextures(colorTexture, depthTexture, &kinector, this->scene, (*RUNTIMECONFIG).show_depth_image);
+            colorTexture.Update(kinector.getColorPixels());
+            depthTexture.Update(kinector.getDepthPixels());
+            window.showTextures(colorTexture, depthTexture, &kinector, this->scene, (*RUNTIMECONFIG).show_depth_image);
             this->scene->onLoopEnd();
-            kinector.ReleaseFrame();
+            kinector.releaseFrame();
             window.EndFrame();
             frame_number++;
             // cloud_seg.clear();

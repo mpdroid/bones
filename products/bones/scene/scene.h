@@ -51,10 +51,12 @@ namespace scene
         void onLoopEnd();
 
     private:
-        bool IsJointOfInterest(k4abt_joint_id_t joint_id);
+        bool isJointOfInterest(k4abt_joint_id_t joint_id);
+        bool isOrientationJoint(k4abt_joint_id_t joint_id);
         vector<AxisWidget> axisWidgets;
         vector<JointWidget> jointWidgets;
         vector<k4abt_joint_id_t> all_joints;
+        vector<k4abt_joint_id_t> orientation_joints;
     };
 
     class WriteAirScene : public AbstractScene
