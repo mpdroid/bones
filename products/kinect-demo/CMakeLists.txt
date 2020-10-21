@@ -23,7 +23,7 @@ add_executable(kinector
     texture.cpp
     clusterizer.cpp
     viewerwindow.cpp
-    kinect_demo_viewer.cpp
+    rendor.cpp
     azure_vision_request.cpp
     euclid.cpp
     controller.cpp

@@ -57,6 +57,7 @@ void Kinector::InitializeFrame(k4a::capture capture)
     is_valid = false;
     bodies.clear();
     bodyIds.clear();
+    depthPixelBuffer.clear();
     depthImage = capture.get_depth_image();
     colorImage = capture.get_color_image();
     colorImageBuffer = colorImage.get_buffer();
@@ -134,6 +135,10 @@ BgraPixel *Kinector::GetPixels()
     return pixels;
 }
 
+BgraPixel *Kinector::GetDepthPixels()
+{
+    return &(depthPixelBuffer[0]);
+}
 int Kinector::GetColorImageHeight()
 {
     return colorImageHeight;
@@ -148,6 +153,17 @@ k4a::image Kinector::GetDepthImage()
 {
     return depthImage;
 }
+
+int Kinector::GetDepthImageHeight()
+{
+    return GetDepthDimensions(kinect_config->depth_mode).second;
+}
+
+int Kinector::GetDepthImageWidth()
+{
+    return GetDepthDimensions(kinect_config->depth_mode).first;
+}
+
 cv::Mat Kinector::GetCVImage()
 {
     return cvImage;
@@ -155,6 +171,23 @@ cv::Mat Kinector::GetCVImage()
 k4a_image_t Kinector::GetColorizedDepthImage()
 {
     return colorizedDepthImage;
+}
+
+float Kinector::GetColorWindowOrigin()
+{
+    return colorWindowOrigin;
+}
+void Kinector::SetColorWindowOrigin(float origin)
+{
+    this->colorWindowOrigin = origin;
+}
+ImVec2 Kinector::GetColorWindowSize()
+{
+    return colorWindowSize;
+}
+void Kinector::SetColorWindowSize(ImVec2 size)
+{
+    this->colorWindowSize = size;
 }
 
 void Kinector::ReleaseFrame()
@@ -302,4 +335,98 @@ bool Kinector::ColorizePointCloud(const k4a_image_t depth_image,
         return false;
     }
     return true;
+}
+
+// Given a depth image, output a BGRA-formatted color image into buffer, using
+// expectedValueRange to define what min/max values the depth image should have.
+// Low values are blue, high values are red.
+//
+void Kinector::ColorizeDepthImage()
+{
+    std::pair<uint16_t, uint16_t> expectedValueRange = GetDepthModeRange(kinect_config->depth_mode);
+    const k4a_image_format_t imageFormat = depthImage.get_format();
+    if (imageFormat != K4A_IMAGE_FORMAT_DEPTH16 && imageFormat != K4A_IMAGE_FORMAT_IR16)
+
+    {
+        throw std::logic_error("Attempted to colorize a non-depth image!");
+    }
+
+    const int width = depthImage.get_width_pixels();
+    const int height = depthImage.get_height_pixels();
+
+    depthPixelBuffer.resize(static_cast<size_t>(width * height));
+
+    const uint16_t *depthData = reinterpret_cast<const uint16_t *>(depthImage.get_buffer());
+    for (int h = 0; h < height; ++h)
+    {
+        for (int w = 0; w < width; ++w)
+        {
+            const size_t currentPixel = static_cast<size_t>(h * width + w);
+            depthPixelBuffer[currentPixel] = K4ADepthPixelColorizer::ColorizeBlueToRed(depthData[currentPixel],
+                                                      expectedValueRange.first,
+                                                      expectedValueRange.second);
+        }
+    }
+}
+
+
+void Kinector::ColorizeFilteredDepthImage(
+                                                  Euclid *euclid,
+                                                  vector<Ray> rays)
+{
+    std::pair<uint16_t, uint16_t> expectedValueRange = GetDepthModeRange(kinect_config->depth_mode);
+    const k4a_image_format_t imageFormat = depthImage.get_format();
+    if (imageFormat != K4A_IMAGE_FORMAT_DEPTH16 && imageFormat != K4A_IMAGE_FORMAT_IR16)
+
+    {
+        throw std::logic_error("Attempted to colorize a non-depth image!");
+    }
+
+    const int width = depthImage.get_width_pixels();
+    const int height = depthImage.get_height_pixels();
+
+    depthPixelBuffer.resize(static_cast<size_t>(width * height));
+
+    const uint16_t *depthData = reinterpret_cast<const uint16_t *>(depthImage.get_buffer());
+    k4a_float2_t *xy_table_data = (k4a_float2_t *)(void *)k4a_image_get_buffer(xy_table);
+
+    const uint8_t *buf = (uint8_t *)(void *)k4a_image_get_buffer(colorizedDepthImage);
+    int len = static_cast<unsigned int>(k4a_image_get_size(colorizedDepthImage));
+    uint8_t *bufcpy = new uint8_t[len];
+    memcpy(bufcpy, buf, len);
+    viewer::BgraPixel *pixels = reinterpret_cast<viewer::BgraPixel *>(bufcpy);
+
+    for (int h = 0; h < height; ++h)
+    {
+        for (int w = 0; w < width; ++w)
+        {
+            const size_t i = static_cast<size_t>(h * width + w);
+            if (depthData[i] != 0 && !isnan(xy_table_data[i].xy.x) && !isnan(xy_table_data[i].xy.y))
+            {
+                float x = (xy_table_data[i].xy.x * (float)depthData[i]);
+                float y = (xy_table_data[i].xy.y * (float)depthData[i]);
+                float z = (float)depthData[i];
+                k4a_float3_t point = {x, y, z};
+                if (euclid->is_point_in_forward_space(point, rays))
+                {
+                    if (i >= len)
+                    {
+                        depthPixelBuffer[i] = K4ADepthPixelColorizer::ColorizeBlueToRed(depthData[i],
+                                                       expectedValueRange.first,
+                                                       expectedValueRange.second);
+                    }
+                    else
+                    {
+                        depthPixelBuffer[i] = pixels[i];
+                    }
+                }
+                else
+                {
+                    depthPixelBuffer[i] = K4ADepthPixelColorizer::ColorizeBlueToRed(depthData[i],
+                                                   expectedValueRange.first,
+                                                   expectedValueRange.second);
+                }
+            }
+        }
+    }
 }

@@ -8,6 +8,20 @@ using namespace std;
 #include "controller.h"
 using namespace controller;
 
+int preflightChecks() {
+    char *visionKey = getenv("AZURE_VISION_KEY"); 
+    if (visionKey == NULL) {
+        ERROR("Obtain Azure Vision subscription key and set AZURE_VISION_KEY in OS environment.");
+        return 1;
+    }
+    char *visionEndpoint = getenv("AZURE_VISION_ENDPOINT"); 
+    if (visionEndpoint == NULL) {
+        ERROR("Obtain Azure Vision endpoint and set AZURE_VISION_ENDPOINT in OS environment.");
+        return 1;
+    }
+    return 0;
+}
+
 void printUsage() {
     cout << "Press 'J' to display joint information..." << endl;
     cout << "Press 'L' to switch to Light Sabers..." << endl;
@@ -15,12 +29,13 @@ void printUsage() {
     cout << "Press 'W' to writing mode; raise left hand above your head and start writing with your right..." << endl;
 }
 
-// TODO warning for Azure Vision Key
-// Draw all joints with connections
+// TODO
 // handle out of window conditions
 // improve accuracy at close range
 int main()
 {
+    if (preflightChecks() != 0)
+        return 1;
     printUsage();
     Controller *controller = Controller::getInstance();
     int retval = controller->runLoop();

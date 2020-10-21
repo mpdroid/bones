@@ -18,9 +18,12 @@ namespace scene
     public:
         static AbstractScene *getInstance(char demo_mode);
         virtual void onLoopStart(int frame_number){};
-        virtual void capture(Kinector *kinector, Euclid *euclid, int frame_number){};
-        virtual void render(ImDrawList *drawList, vector<int> bodies, float y_shift){};
+        virtual void comprehend(Kinector *kinector, int frame_number){};
+        virtual void annotate(ImDrawList *drawList, vector<int> bodies, float y_shift){};
         virtual void onLoopEnd(){};
+    protected:
+        vector<k4abt_joint_id_t> joints_of_interest;
+        vector<JointCoordinates> moving_average;
     };
 
     class LightSaberScene : public AbstractScene
@@ -29,8 +32,8 @@ namespace scene
         LightSaberScene();
         ~LightSaberScene();
         void onLoopStart(int frame_number);
-        void capture(Kinector *kinector, Euclid *euclid, int frame_number);
-        void render(ImDrawList *drawList, vector<int> bodies, float y_shift);
+        void comprehend(Kinector *kinector, int frame_number);
+        void annotate(ImDrawList *drawList, vector<int> bodies, float y_shift);
         void onLoopEnd();
 
     private:
@@ -43,13 +46,15 @@ namespace scene
         JointInfoScene();
         ~JointInfoScene();
         void onLoopStart(int frame_number);
-        void capture(Kinector *kinector, Euclid *euclid, int frame_number);
-        void render(ImDrawList *drawList, vector<int> bodies, float y_shift);
+        void comprehend(Kinector *kinector, int frame_number);
+        void annotate(ImDrawList *drawList, vector<int> bodies, float y_shift);
         void onLoopEnd();
 
     private:
+        bool IsJointOfInterest(k4abt_joint_id_t joint_id);
         vector<AxisWidget> axisWidgets;
         vector<JointWidget> jointWidgets;
+        vector<k4abt_joint_id_t> all_joints;
     };
 
     class WriteAirScene : public AbstractScene
@@ -58,8 +63,8 @@ namespace scene
         WriteAirScene();
         ~WriteAirScene();
         void onLoopStart(int frame_number);
-        void capture(Kinector *kinector, Euclid *euclid, int frame_number);
-        void render(ImDrawList *drawList, vector<int> bodies, float y_shift);
+        void comprehend(Kinector *kinector, int frame_number);
+        void annotate(ImDrawList *drawList, vector<int> bodies, float y_shift);
         void onLoopEnd();
 
     private:

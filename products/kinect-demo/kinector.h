@@ -3,6 +3,8 @@
 #include <iostream>
 #include <math.h>
 using namespace std;
+#include "k4adepthpixelcolorizer.h"
+#include "k4apixel.h"
 #include "k4astaticimageproperties.h"
 #include "euclid.h"
 #include <k4abt.h>
@@ -23,12 +25,20 @@ namespace kinector
         void InitializeFrame(k4a::capture capture);
         k4a_calibration_t *GetCalibration();
         viewer::BgraPixel *GetPixels();
+        viewer::BgraPixel *GetDepthPixels();
         cv::Mat GetCVImage();
         k4a::image GetDepthImage();
+        int GetDepthImageHeight();
+        int GetDepthImageWidth();
         int GetColorImageHeight();
         int GetColorImageWidth();
         k4a_image_t GetColorizedDepthImage();
         k4a_image_t GetXYTable();
+        float GetColorWindowOrigin();
+        void SetColorWindowOrigin(float origin);
+        ImVec2 GetColorWindowSize();
+        void SetColorWindowSize(ImVec2 size);
+
         vector<k4abt_body_t> GetBodies();
         vector<int> GetBodyIds();
         void ReleaseFrame();
@@ -40,24 +50,15 @@ namespace kinector
                                vector<Ray> rays,
                                cilantro::VectorSet3f *cilantroPoints,
                                cilantro::VectorSet3f *cilantroColors);
-
-        static void create_xy_table(const k4a_calibration_t *calibration, k4a_image_t xy_table);
-        static void generate_point_cloud(const k4a_image_t depth_image,
-                                         k4a_image_t transformed_color_image,
-                                         const k4a_image_t xy_table,
-                                         Euclid *euclid,
-                                         vector<Ray> rays,
-                                         cilantro::VectorSet3f &cilantroPoints,
-                                         cilantro::VectorSet3f &cilantroColors,
-                                         int *point_count);
-        static bool colorize_point_cloud(k4a_transformation_t transformation_handle,
-                                         const k4a_image_t depth_image,
-                                         const k4a_image_t color_image,
-                                         k4a_image_t *transformed_color_image);
+        void ColorizeDepthImage();
+        void ColorizeFilteredDepthImage(Euclid *euclid,
+                                        vector<Ray> rays);
         Kinector();
 
     private:
         // Kinector();
+        float colorWindowOrigin;
+        ImVec2 colorWindowSize;
         k4a_transformation_t transformation;
         k4a_image_t xy_table = NULL;
         k4a_image_t point_cloud = NULL;
@@ -72,6 +73,7 @@ namespace kinector
         int colorImageWidth;
         uint8_t *colorImageBuffer;
         viewer::BgraPixel *pixels;
+        vector<viewer::BgraPixel> depthPixelBuffer;
         k4abt_frame_t body_frame = NULL;
         cv::Mat cvImage;
         vector<int> bodyIds;

@@ -14,8 +14,8 @@ namespace scene {
         ThingFinderScene();
         ~ThingFinderScene();
         void onLoopStart(int frame_number);
-        void capture(Kinector *kinector, Euclid *euclid, int frame_number);
-        void render(ImDrawList *drawList, vector<int> bodies, float y_shift);
+        void comprehend(Kinector *kinector, int frame_number);
+        void annotate(ImDrawList *drawList, vector<int> bodies, float y_shift);
         void onLoopEnd();
         vector<Ray> getRays();
 

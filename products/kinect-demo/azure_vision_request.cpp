@@ -19,16 +19,17 @@ Reference:
 1) Console debug tools: https://westus.dev.cognitive.microsoft.com/docs/services/56f91f2d778daf23d8ec6739/operations/56f91f2e778daf14a499e1fa/console
 2) API interface: https://westus.dev.cognitive.microsoft.com/docs/services/56f91f2d778daf23d8ec6739/operations/56f91f2e778daf14a499e1fa
 */
-std::string vision_base_host = "https://xforce1-vision.cognitiveservices.azure.com/vision/v3.0/analyze?visualFeatures=";
+std::string vision_base_host ="";
 
-//std::string vision_base_host = "https://eastus.api.cognitive.microsoft.com/vision/v3.0/analyze?visualFeatures=";
-// const std::string const_vision_host = "https://eastus.api.cognitive.microsoft.com/vision/v3.0/analyze?visualFeatures=";
-const std::string const_vision_host = "https://xforce1-vision.cognitiveservices.azure.com/vision/v3.0/analyze?visualFeatures=";
+
+const std::string const_vision_host = "";
 std::string feature_options[5] = {"Objects", "Brands", "Categories", "Description", "Faces"};
 
 AzureVisionRequest::AzureVisionRequest(int flag)
 {
-    vision_base_host = const_vision_host;
+    char *tmp = getenv("AZURE_VISION_ENDPOINT");
+    if (tmp != NULL)
+        vision_base_host = getenv("AZURE_VISION_ENDPOINT");
     this->setRequestType(flag);
     // this->client = new http_client(conversions::to_string_t(vision_base_host));
     this->client = new http_client(vision_base_host);

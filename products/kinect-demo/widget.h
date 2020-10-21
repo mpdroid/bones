@@ -50,6 +50,7 @@ struct JointInfo
     vector<float> orientation;
     vector<float> imageCoordinates;
     ImVec2 textCoordinates;
+    k4abt_joint_id_t jointId;
 };
 
 struct JointWidget : Widget

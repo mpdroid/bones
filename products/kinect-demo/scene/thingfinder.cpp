@@ -16,13 +16,16 @@ ThingFinderScene::~ThingFinderScene()
 
 void ThingFinderScene::onLoopStart(int frame_number)
 {
+    // TRACE("num of dets before", detections.size());
     detections.erase(
         std::remove_if(detections.begin(), detections.end(),
-                       [&](const Detection detection) { return (frame_number - 20 * FRAME_INTERVAL) > detection.frame_number; }),
+                       [&](const Detection detection) { return (frame_number -  10 * FRAME_INTERVAL) > detection.frame_number; }),
         detections.end());
+    // TRACE("num of dets after", detections.size());
     currentFrameNumber = frame_number;
     rays.clear();
     objectPointers.clear();
+    cubeWidgets.clear();
 }
 
 void detect_objects(int frame_number,
@@ -126,9 +129,12 @@ void detect_objects(int frame_number,
                         vq->SendAnalysisRequest(getenv("AZURE_VISION_KEY"), buff);
                         string name = vq->getTopObject();
                         TO_UPPER(name);
-                        TRACE("detected ", name," in frame ",detection.frame_number);
+                        TRACE("detected ", name, " in frame ", detection.frame_number);
+                        if (name != "")
+                        {
+                            detections->clear();
+                        }
                         detection.name = name;
-
                         detections->push_back(detection);
                     }
                     catch (const std::exception &e)
@@ -141,8 +147,17 @@ void detect_objects(int frame_number,
     }
 }
 
-void ThingFinderScene::capture(Kinector *kinector, Euclid *euclid, int frame_number)
+void ThingFinderScene::comprehend(Kinector *kinector, int frame_number)
 {
+    Euclid *euclid = new Euclid(kinector->GetCalibration(),
+                                kinector->GetColorWindowOrigin(),
+                                kinector->GetColorWindowSize(),
+                                kinector->GetColorImageWidth(),
+                                kinector->GetColorImageHeight(),
+                                &moving_average,
+                                K4ABT_JOINT_COUNT,
+                                kinector->GetBodies(),
+                                joints_of_interest);
     cilantro::VectorSet3f cilantroPoints;
     cilantro::VectorSet3f cilantroColors;
     cilantro::PointCloud3f cloud_seg;
@@ -222,15 +237,11 @@ void ThingFinderScene::capture(Kinector *kinector, Euclid *euclid, int frame_num
         cubeWidget.bbl = euclid->vector_to_window(bbl);
         cubeWidget.name = detection.name;
         cubeWidgets.push_back(cubeWidget);
-
-        // ImVec2 top_left = euclid->vector_to_window(detection.cube.u);
-        // ImVec2 bottom_right = euclid->vector_to_window(detection.cube.v);
-        // ImVec2 rayStart = euclid->vector_to_window(detection.ray.origin);
-        // ImVec2 rayEnd = euclid->point_to_window(detection.cube.pointer[1]);
     }
+    kinector->ColorizeFilteredDepthImage(euclid, rays);
 }
 
-void ThingFinderScene::render(ImDrawList *drawList, vector<int> bodies, float y_shift)
+void ThingFinderScene::annotate(ImDrawList *drawList, vector<int> bodies, float y_shift)
 {
     for (int i = 0; i < cubeWidgets.size(); i++)
     {
@@ -257,7 +268,11 @@ void ThingFinderScene::render(ImDrawList *drawList, vector<int> bodies, float y_
                 ImVec2 textStart(widget.ftl.x + 5.f, widget.ftl.y - 50.f);
 
                 float fontSize = 25.f;
-                drawList->AddText(NULL, fontSize, textStart, IM_COL32(255, 255, 255, boxalpha), widget.name.c_str());
+                float rectLength = 20.f * widget.name.length();
+                ImVec2 rectStart(widget.ftl.x - 5.f, widget.ftl.y - 52.f);
+                ImVec2 rectEnd(widget.ftl.x + rectLength + 5.f, widget.ftl.y - 23.f);
+                drawList->AddRectFilled(rectStart, rectEnd, IM_COL32(255, 255, 255, boxalpha));
+                drawList->AddText(NULL, fontSize, textStart, IM_COL32(0, 0, 0, boxalpha), widget.name.c_str());
             }
 
             ImVec2 lines[4] = {widget.ftl, widget.ftr, widget.fbr, widget.fbl};

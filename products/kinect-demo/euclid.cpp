@@ -460,7 +460,7 @@ JointInfo Euclid::get_joint_information(uint32_t body_id, k4abt_joint_id_t joint
     k4a_float2_t pt2d = point_to_color(joint.position, valid);
     if (*valid == 1)
     {
-
+        jointInfo.jointId = joint_id;
         jointInfo.depthCoordinates = {joint.position.v[0], joint.position.v[1], joint.position.v[2]};
         jointInfo.orientation = {joint.orientation.v[0], joint.orientation.v[1], joint.orientation.v[2], joint.orientation.v[3]};
         jointInfo.imageCoordinates = {pt2d.v[0], pt2d.v[0]};
@@ -644,7 +644,7 @@ bool Euclid::is_point_in_forward_space(k4a_float3_t point, vector<Ray> rays)
         float denom = point_direction.norm();
         float dotp_normalized = dotp / denom;
         float angle = acos(dotp_normalized);
-        if (dotp > 0.0001f && angle <= M_PI / 4.f)
+        if (dotp > 0.0001f && angle <= M_PI / 6.f)
             return true;
     }
     return false;

@@ -7,6 +7,11 @@ const auto WRITE_INTERVAL = 1;
 /*****************************************************************/
 WriteAirScene::WriteAirScene()
 {
+    joints_of_interest = {
+        K4ABT_JOINT_HAND_LEFT,
+        K4ABT_JOINT_SPINE_NAVEL,
+        K4ABT_JOINT_THUMB_RIGHT,
+        K4ABT_JOINT_HAND_RIGHT};
 }
 
 WriteAirScene::~WriteAirScene()
@@ -17,14 +22,24 @@ void WriteAirScene::onLoopStart(int frame_number)
 {
 }
 
-void WriteAirScene::capture(Kinector *kinector, Euclid *euclid, int frame_number)
+void WriteAirScene::comprehend(Kinector *kinector, int frame_number)
 {
+    TRACE("capturing write air");
+    Euclid *euclid = new Euclid(kinector->GetCalibration(),
+                                kinector->GetColorWindowOrigin(),
+                                kinector->GetColorWindowSize(),
+                                kinector->GetColorImageWidth(),
+                                kinector->GetColorImageHeight(),
+                                &moving_average,
+                                K4ABT_JOINT_COUNT,
+                                kinector->GetBodies(),
+                                joints_of_interest);
     for (int k = 0; k < euclid->get_body_count(); k++)
     {
 
         k4a_float3_t left_hand = euclid->joint_to_global(k, K4ABT_JOINT_HAND_LEFT, {0.f, 0.f, 0.f});
         k4a_float3_t left_hand_act = euclid->get_joint(k, K4ABT_JOINT_HAND_LEFT).position;
-        k4a_float3_t nose = euclid->joint_to_global(k, K4ABT_JOINT_NOSE, {0.f, 0.f, 0.f});
+        k4a_float3_t navel = euclid->joint_to_global(k, K4ABT_JOINT_SPINE_NAVEL, {0.f, 0.f, 0.f});
         k4a_float3_t tip = euclid->joint_to_global(k, K4ABT_JOINT_THUMB_RIGHT, {0.f, 0.f, 0.f});
         k4a_float3_t hand = euclid->joint_to_global(k, K4ABT_JOINT_HAND_RIGHT, {0.f, 0.f, 0.f});
         ImVec2 tip_vec = euclid->point_to_window(tip);
@@ -53,7 +68,7 @@ void WriteAirScene::capture(Kinector *kinector, Euclid *euclid, int frame_number
         int currentLetterIndex = letterWidgets.size() - 1;
         currentLetter = letterWidgets[currentLetterIndex];
 
-        if (nose.v[1] > left_hand.v[1])
+        if (navel.v[1] > left_hand.v[1])
         {
             writeMode = 1;
         }
@@ -86,16 +101,16 @@ void WriteAirScene::capture(Kinector *kinector, Euclid *euclid, int frame_number
             }
         }
     }
+    kinector->ColorizeDepthImage();
 }
 
 float getBezierValue(float n1, float n2, float perc)
 {
     float diff = n2 - n1;
-
     return n1 + (diff * perc);
 }
 
-void WriteAirScene::render(ImDrawList *drawList, vector<int> bodies, float y_shift)
+void WriteAirScene::annotate(ImDrawList *drawList, vector<int> bodies, float y_shift)
 {
     for (int i = 0; i < letterWidgets.size(); i++)
     {

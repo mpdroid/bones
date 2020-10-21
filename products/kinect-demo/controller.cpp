@@ -51,15 +51,8 @@ int Controller::runLoop()
 {
     try
     {
-        k4a_image_t xy_table = NULL;
-        k4a_image_t point_cloud = NULL;
         int frame_number = 0;
-        vector<Detection> detections;
-        vector<JointCoordinates> moving_average;
-        int left_hand_raise_state = 0;
 
-        // Check for devices
-        //
         const uint32_t deviceCount = k4a::device::get_installed_count();
         if (deviceCount == 0)
         {
@@ -76,12 +69,12 @@ int Controller::runLoop()
         k4a::device dev = k4a::device::open(K4A_DEVICE_DEFAULT);
         dev.start_cameras(&kinect_config);
 
-        KinectDemoViewer window = KinectDemoViewer::Instance();
+        Rendor window = Rendor::Instance();
         INFO("initializing window");
         window.Initialize(
             "Kinect DK Demo",
-            1280,
-            720,
+            GetColorDimensions(kinect_config.color_resolution).first,
+            GetColorDimensions(kinect_config.color_resolution).second,
             key_callback,
             RUNTIMECONFIG,
             kinect_config);
@@ -107,10 +100,11 @@ int Controller::runLoop()
                 SCENE_SWITCH_INDICATOR = 'Z';
             }
             this->scene->onLoopStart(frame_number);
-            std::vector<BgraPixel> depthTextureBuffer;
-            Euclid *euclid;
+            // std::vector<BgraPixel> depthTextureBuffer;
 
             window.ComputeDimensions();
+            kinector.SetColorWindowOrigin(window.GetColorWindowOrigin());
+            kinector.SetColorWindowSize(window.GetColorWindowSize());
 
             k4a::capture capture;
             vector<k4abt_body_t> bodies;
@@ -123,92 +117,14 @@ int Controller::runLoop()
                     ERROR("Failed to initialize kinect in frame");
                     break;
                 }
-                vector<k4abt_joint_id_t> joints_of_interest = {
-                    K4ABT_JOINT_NOSE,
-                    K4ABT_JOINT_HAND_LEFT,
-                    K4ABT_JOINT_HAND_RIGHT,
-                    K4ABT_JOINT_ELBOW_RIGHT,
-                    K4ABT_JOINT_SPINE_CHEST,
-                    K4ABT_JOINT_HANDTIP_LEFT,
-                    K4ABT_JOINT_HANDTIP_RIGHT,
-                    K4ABT_JOINT_THUMB_RIGHT};
-                num_bodies = kinector.GetBodyIds().size();
-                if (moving_average.size() < (int)num_bodies)
-                {
-                    moving_average.resize((int)num_bodies);
-                }
-                euclid = new Euclid(kinector.GetCalibration(), window.GetColorWindowOrigin(),
-                                                 window.GetColorWindowSize(), kinector.GetColorImageWidth(), kinector.GetColorImageHeight(),
-                                                 &moving_average, K4ABT_JOINT_KNEE_LEFT,
-                                                 kinector.GetBodies(),
-                                                 joints_of_interest);
-                if ((*RUNTIMECONFIG).demo_mode == DEMO_MODE_OBJECT_DETECTION)
-                {
-                    euclid = new Euclid(kinector.GetCalibration(), window.GetColorWindowOrigin(),
-                                                     window.GetColorWindowSize(), kinector.GetColorImageWidth(), kinector.GetColorImageHeight(), &moving_average, K4ABT_JOINT_HANDTIP_RIGHT,
-                                                     kinector.GetBodies(),
-                                                     joints_of_interest);
-                }
-                this->scene->capture(&kinector, euclid, frame_number);
 
-                vector<Ray> rays;
-                if ((*RUNTIMECONFIG).demo_mode == DEMO_MODE_OBJECT_DETECTION)
-                {
-                    rays = ((ThingFinderScene *)(this->scene))->getRays();
-                }
-
-                if ((*RUNTIMECONFIG).show_depth_image == true)
-                {
-                    if (rays.size() == 0)
-                    {
-                        window.ColorizeDepthImage(kinector.GetDepthImage(),
-                                                  K4ADepthPixelColorizer::ColorizeBlueToRed,
-                                                  GetDepthModeRange(kinect_config.depth_mode),
-                                                  &depthTextureBuffer);
-                    }
-                    else
-                    {
-
-                        window.ColorizeFilteredDepthImage(kinector.GetDepthImage(),
-                                                          kinector.GetColorizedDepthImage(),
-                                                          kinector.GetXYTable(),
-                                                          euclid,
-                                                          rays,
-                                                          K4ADepthPixelColorizer::ColorizeBlueToRed,
-                                                          GetDepthModeRange(kinect_config.depth_mode),
-                                                          &depthTextureBuffer);
-                        // if (detections.size() > 0)
-                        // {
-                        //     window.ColorizeClusteredDepthImage(depthImage, colorized_depth_image, &depthTextureBuffer, &cloud_seg,
-                        //                                 detections,
-                        //                                 sensor_calibration);
-                        // }
-                    }
-                    depthTexture.Update(&(depthTextureBuffer[0]));
-                }
-
-
-                delete euclid;
+                this->scene->comprehend(&kinector, frame_number);
             }
             colorTexture.Update(kinector.GetPixels());
-            kinector.ReleaseFrame();
-            if ((*RUNTIMECONFIG).show_depth_image == true)
-            {
-                window.ShowDepthTexture(depthTexture);
-            }
-            if (kinector.GetBodyIds().size() == 0)
-            {
-                window.ShowColorTexture(colorTexture);
-            }
-            else
-            {
-                window.ShowTextureWithPersistentBoundingBoxes(
-                    colorTexture,
-                    this->scene,
-                    kinector.GetBodyIds());
-            }
-
+            depthTexture.Update(kinector.GetDepthPixels());
+            window.ShowTextures(colorTexture, depthTexture, &kinector, this->scene, (*RUNTIMECONFIG).show_depth_image);
             this->scene->onLoopEnd();
+            kinector.ReleaseFrame();
             window.EndFrame();
             frame_number++;
             // cloud_seg.clear();

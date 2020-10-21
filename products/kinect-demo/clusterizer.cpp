@@ -29,6 +29,10 @@ vector<BoundingCube> Clusterizer::Clusterize(cilantro::PointCloud3f *segmentedCl
         cilantro::PointsColorsProximityEvaluator<float, 3> ev(cloud.colors, 0.1f, 0.05f);
 
         cce.segment(nh, ev, 200, this->cloud.size());
+        if (cce.getNumberOfClusters() == 0) {
+            return boundingCubes;
+        }
+        TRACE("Segmented... Num clusters: ", cce.getNumberOfClusters());
         size_t num_labels = cce.getNumberOfClusters();
         const auto &labels = cce.getPointToClusterIndexMap();
 
@@ -39,6 +43,7 @@ vector<BoundingCube> Clusterizer::Clusterize(cilantro::PointCloud3f *segmentedCl
         }
         color_map.col(num_labels).setZero();
         cilantro::VectorSet3f colors(3, labels.size());
+        TRACE("Num colors: ", colors.cols());
         for (size_t i = 0; i < colors.cols(); i++)
         {
             colors.col(i) = color_map.col(labels[i]);
@@ -47,6 +52,7 @@ vector<BoundingCube> Clusterizer::Clusterize(cilantro::PointCloud3f *segmentedCl
         (*segmentedCloud) = cilantro::PointCloud3f(cloud.points, cloud.normals, colors);
 
         const auto &cpi = cce.getClusterToPointIndicesMap();
+        TRACE("Num cluster points: ", cpi.size());
         for (size_t i = 0; i < cpi.size() - 1; i++)
         {
             float maxx = -INFINITY;
@@ -101,7 +107,6 @@ vector<BoundingCube> Clusterizer::Clusterize(cilantro::PointCloud3f *segmentedCl
             cube.label = i;
             cube.points = points;
             cube.pointColors = pointColors;
-            // cube.pointer = {};
             boundingCubes.push_back(cube);
         }
     }

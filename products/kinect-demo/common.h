@@ -2,6 +2,7 @@
 #define __COMMON_H
 
 #include <iostream>
+#include <string>
 #define DEMO_MODE_OBJECT_DETECTION 'O'
 #define DEMO_MODE_LIGHT_SABERS 'L'
 #define DEMO_MODE_JOINT_INFO 'J'
