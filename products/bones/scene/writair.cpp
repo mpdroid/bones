@@ -9,7 +9,7 @@ WriteAirScene::WriteAirScene()
 {
     joints_of_interest = {
         K4ABT_JOINT_HAND_LEFT,
-        K4ABT_JOINT_SPINE_NAVEL,
+        K4ABT_JOINT_SPINE_CHEST,
         K4ABT_JOINT_THUMB_RIGHT,
         K4ABT_JOINT_HAND_RIGHT};
 }
@@ -39,7 +39,7 @@ void WriteAirScene::comprehend(Kinector *kinector, int frame_number)
 
         k4a_float3_t left_hand = euclid->jointToGlobal(k, K4ABT_JOINT_HAND_LEFT, {0.f, 0.f, 0.f});
         k4a_float3_t left_hand_act = euclid->getJoint(k, K4ABT_JOINT_HAND_LEFT).position;
-        k4a_float3_t navel = euclid->jointToGlobal(k, K4ABT_JOINT_SPINE_NAVEL, {0.f, 0.f, 0.f});
+        k4a_float3_t chest = euclid->jointToGlobal(k, K4ABT_JOINT_SPINE_CHEST, {0.f, 0.f, 0.f});
         k4a_float3_t tip = euclid->jointToGlobal(k, K4ABT_JOINT_THUMB_RIGHT, {0.f, 0.f, 0.f});
         k4a_float3_t hand = euclid->jointToGlobal(k, K4ABT_JOINT_HAND_RIGHT, {0.f, 0.f, 0.f});
         ImVec2 tip_vec = euclid->pointToWindow(tip);
@@ -68,7 +68,7 @@ void WriteAirScene::comprehend(Kinector *kinector, int frame_number)
         int currentLetterIndex = letterWidgets.size() - 1;
         currentLetter = letterWidgets[currentLetterIndex];
 
-        if (navel.v[1] > left_hand.v[1])
+        if (chest.v[1] > left_hand.v[1])
         {
             writeMode = 1;
         }
