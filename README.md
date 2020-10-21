@@ -1,4 +1,4 @@
-# kinect-o-magic
+# bones
 Demonstrates Azure Kinect DK camera body tracking features.  Watch this youtube video to see the features in action.
 
 
