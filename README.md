@@ -95,4 +95,4 @@ Read the accompanying Medium article for a deeper understanding of the APIs and 
 - [kzampog/cilantro](https://github.com/kzampog/cilantro) - Point Cloud manipulation including clustering
 - [ocurnut/imgui](https://github.com/ocornut/imgui) - Rendering depth and camera images with drawing overlays
 - [deercoder/cpprestsdk-example](https://github.com/deercoder/cpprestsdk-example) - Using cpprestsdk consume Azure vision services
-- [Note on Ray-Plane intersection - by Sam Simons](https://samsymons.com/blog/math-notes-ray-plane-intersection/)
+- [Note on Ray-Plane intersection](https://samsymons.com/blog/math-notes-ray-plane-intersection/)  - by Sam Symons
