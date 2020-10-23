@@ -1,5 +1,6 @@
-Demonstrates Azure Kinect DK camera body tracking features.  Watch this youtube video to see the features in action.
+Demonstrates Azure Kinect DK camera body tracking features.  Watch this (youtube video)[https://www.youtube.com/watch?v=JbQFNzRO1x0] to see the features in action.
 
+Read the accompanying (medium article)[https://marvinpdroid.medium.com/thing-finding-with-kinect-dk-b50470044c56] for a deeper understanding of the APIs and geometry involved.
 
 ## Usage
 Note: This project has been developed on Ubuntu 20.04. 
@@ -78,15 +79,21 @@ In this project, we make use of the  RGB camera, the Depth camera, the [Sensor a
 
 ![Sequence diagram](sequence.png "Sequence diagram")
 
-The project applies this basic framework to implement four body tracking applications: 
+The project applies this basic framework to implement a few body tracking applications: 
 - *Displaying Joint Information*: Visualizes the body tracking information by showing the depth position and orientation of a few key joints, directly on the color camera video feed. 
 - *Light Sabers*: Attaches light sabers to the hand of each body in the video, by making use of elbow, hand and thumb position and orientation. Demonstrates usage in augmented reality games without the need for expensive controllers physically attached to the human body.
 - *Air Writing*: Lets the subject create letters or other artwork in the space around them by simply moving their hands. Demonstrates how to recognize gestures and use them to direct virtual or real-world action based on these gestures.
 - *Thing Finder*: Recognizes objects being pointed at by the subject. This demonstrates how to combine body tracking with point cloud geometry and  use Azure cognitive services to create powerful 3-D vision AI applications.
+- *and others...*
 
 The project is designed to evolve as a platform. The goal is to make it easy to create new body tracking applications by simply implementing the `AbstractScene` interface.
 
-Read the accompanying Medium article for a deeper understanding of the APIs and geometry involved.
+
+Watch this (youtube video)[https://www.youtube.com/watch?v=JbQFNzRO1x0] to see the features in action.
+
+Read the accompanying (medium article)[https://marvinpdroid.medium.com/thing-finding-with-kinect-dk-b50470044c56] for a deeper understanding of the APIs and geometry involved.
+
+
 
 
 ## Ackowledgments and References
