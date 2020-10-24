@@ -1,11 +1,11 @@
-Demonstrates Azure Kinect DK camera body tracking features.  Watch this (youtube video)[https://www.youtube.com/watch?v=JbQFNzRO1x0] to see the features in action.
+Demonstrates Azure Kinect DK camera body tracking features.  Watch this [youtube video](https://www.youtube.com/watch?v=JbQFNzRO1x0) to see the features in action.
 
-Read the accompanying (medium article)[https://marvinpdroid.medium.com/thing-finding-with-kinect-dk-b50470044c56] for a deeper understanding of the APIs and geometry involved.
+Read the accompanying [medium article](https://marvinpdroid.medium.com/thing-finding-with-kinect-dk-b50470044c56) for a deeper understanding of the APIs and geometry involved.
 
 ## Usage
 Note: This project has been developed on Ubuntu 20.04. 
 
-### Step 1: [Buy an Azure Kinect DK camera](https://www.microsoft.com/en-us/p/azure-kinect-dk/8pp5vxmd9nhq?rtc=1&activetab=pivot:overviewtab)
+### Step 1: Get the [Azure Kinect DK camera](https://www.microsoft.com/en-us/p/azure-kinect-dk/8pp5vxmd9nhq?rtc=1&activetab=pivot:overviewtab)
 
 ### Step 2: Install the libraries
 The general steps are as outlined in [Microsoft documentation](https://docs.microsoft.com/en-us/azure/Kinect-dk/sensor-sdk-download); but with a couple of hacks to make things work on Ubuntu 20.04.
@@ -89,9 +89,9 @@ The project applies this basic framework to implement a few body tracking applic
 The project is designed to evolve as a platform. The goal is to make it easy to create new body tracking applications by simply implementing the `AbstractScene` interface.
 
 
-Watch this (youtube video)[https://www.youtube.com/watch?v=JbQFNzRO1x0] to see the features in action.
+Watch this [youtube video](https://www.youtube.com/watch?v=JbQFNzRO1x0) to see the features in action.
 
-Read the accompanying (medium article)[https://marvinpdroid.medium.com/thing-finding-with-kinect-dk-b50470044c56] for a deeper understanding of the APIs and geometry involved.
+Read the accompanying [medium article](https://marvinpdroid.medium.com/thing-finding-with-kinect-dk-b50470044c56) for a deeper understanding of the APIs and geometry involved.
 
 
 
