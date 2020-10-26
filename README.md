@@ -96,10 +96,14 @@ Read the accompanying [medium article](https://marvinpdroid.medium.com/thing-fin
 
 
 
-## Ackowledgments and References
+## Ackowledgments
 - [Azure-Kinect-Sensor-SDK](https://github.com/microsoft/Azure-Kinect-Sensor-SDK) - Basics of camera capture and rendering in 2D and 3D
 - [Azure-Kinect-Samples](https://github.com/microsoft/Azure-Kinect-Samples) - Advanced examples including body tracking
 - [kzampog/cilantro](https://github.com/kzampog/cilantro) - Point cloud manipulation including clustering
 - [ocurnut/imgui](https://github.com/ocornut/imgui) - Rendering depth and camera images with drawing overlays
 - [deercoder/cpprestsdk-example](https://github.com/deercoder/cpprestsdk-example) - Using cpprestsdk to consume Azure vision services
 - [Note on Ray-Plane intersection](https://samsymons.com/blog/math-notes-ray-plane-intersection/)  - by Sam Symons
+
+## References
+1. Zampogiannis, Konstantinos and Fermuller, Cornelia and Aloimonos, Yiannis (2018). cilantro, A Lean and Efficient Library for Point Cloud Data Processing. [kzampog/cilantro](https://github.com/kzampog/cilantro)
+2. Symons, Sam. [Note on Ray-Plane intersection](https://samsymons.com/blog/math-notes-ray-plane-intersection/)
